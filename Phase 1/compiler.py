@@ -140,7 +140,7 @@ def scan(text):
 
 
 if __name__ == '__main__':
-    with open("D:/Books/University/6th Semester (Winter 03- Spring 04)/Compiler Design/Assignments/Project/Phase 1/Code/input.txt", "r", encoding="utf-8") as file:
+    with open("input.txt", "r", encoding="utf-8") as file:
         text = file.read()
     tokens, errors = scan(text)
     
@@ -152,13 +152,13 @@ if __name__ == '__main__':
     for line_no, token_string, error_msg in errors:
         errors_by_line.setdefault(line_no, []).append((token_string, error_msg))
 
-    with open("D:/Books/University/6th Semester (Winter 03- Spring 04)/Compiler Design/Assignments/Project/Phase 1/Code/tokens.txt", "w", encoding="utf-8") as f:
+    with open("tokens.txt", "w", encoding="utf-8") as f:
         for line_no in sorted(tokens_by_line.keys()):
             line_tokens = tokens_by_line[line_no]
             token_str = " ".join(f"({typ}, {val})" for typ, val in line_tokens)
             f.write(f"{line_no}.\t{token_str}\n")
 
-    with open("D:/Books/University/6th Semester (Winter 03- Spring 04)/Compiler Design/Assignments/Project/Phase 1/Code/lexical_errors.txt", "w", encoding="utf-8") as f:
+    with open("lexical_errors.txt", "w", encoding="utf-8") as f:
         if errors_by_line:
             for line_no in sorted(errors_by_line.keys()):
                 line_errors = errors_by_line[line_no]
@@ -167,6 +167,6 @@ if __name__ == '__main__':
         else:
             f.write("There is no lexical error\n")
 
-    with open("D:/Books/University/6th Semester (Winter 03- Spring 04)/Compiler Design/Assignments/Project/Phase 1/Code/symbol_table.txt", "w", encoding="utf-8") as f:
+    with open("symbol_table.txt", "w", encoding="utf-8") as f:
         for idx, token in enumerate(symbol_table, start=1):
             f.write(f"{idx}.\t{token}\n")

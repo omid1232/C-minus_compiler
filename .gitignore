@@ -1,2 +1,5 @@
 testcases_phase1/
 input.txt
+lexical_errors.txt
+symbol_table.txt
+tokens.txt
