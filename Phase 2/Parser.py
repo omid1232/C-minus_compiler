@@ -162,7 +162,7 @@ class Parser:
 
     def exit_node(self):
         out = self.stack.pop()
-        print(out.label)
+        # print(out.label)
 
     def match(self, expected_string):
         if self.token_string == expected_string:
@@ -172,7 +172,6 @@ class Parser:
             if self.token_string == "$":
                 return
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing {expected_string}")
-            # print(f"#{self.line_number} : syntax error, missing {expected_string}")
 
     def match_id(self):
         if self.token_type == "ID":
@@ -217,13 +216,11 @@ class Parser:
     def Program(self):
         self.root = Node("Program")
         self.stack.append(self.root)
-        # print(self.token_string)
         while self.token_string not in {"int", "void", "$"}:
             if self.token_type in {"ID", "NUM"}:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         if self.token_string in {"int", "void"}:    # first
             self.DeclarationList()
@@ -237,7 +234,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("DeclarationList")
         if self.token_string in {"int", "void"}:    # first
@@ -253,15 +249,14 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("Declaration")
         if self.token_string in {"int", "void"}:    # first
+            self.enter_node("Declaration")
             self.DeclarationInitial()
             self.DeclarationPrime()
+            self.exit_node()
         elif self.token_string in {";", "(", "{", "}", "break", "if", "while", "return", "+", "-", "$"} or self.token_type in {"ID", "NUM"}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing Declaration")
-        self.exit_node()
 
     def DeclarationInitial(self):
         while self.token_string not in {"int", "void", ";", "[", "(", ")", ","}:
@@ -271,15 +266,14 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("DeclarationInitial")
         if self.token_string in {"int", "void"}:    # first
+            self.enter_node("DeclarationInitial")
             self.TypeSpecifier()
             self.match_id()
+            self.exit_node()
         elif self.token_string in {";", "[", "(", ")", ","}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing DeclarationInitial")
-        self.exit_node()
 
     def DeclarationPrime(self):
         while self.token_string not in {"[", ";", "(", "{", "}", "break", "if", "while", "int", "void", "return", "+", "-", "$"} and self.token_type not in {"ID", "NUM"}:
@@ -287,16 +281,17 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("DeclarationPrime")
         if self.token_string == "(":    #first
+            self.enter_node("DeclarationPrime")
             self.FunDeclarationPrime()
+            self.exit_node()
         elif self.token_string in {"[", ";"}:
+            self.enter_node("DeclarationPrime")
             self.VarDeclarationPrime()
+            self.exit_node()
         elif self.token_string in {"{", "}", "break", "if", "while", "return", "void", "int", "+", "-", "$"} or self.token_type in {"ID", "NUM"}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing DeclarationPrime")
-        self.exit_node()
 
     def VarDeclarationPrime(self):
         while self.token_string not in {"[", ";", "(", "{", "}", "break", "if", "while", "return", "int", "void", "+", "-", "$"} and self.token_type not in {"ID", "NUM"}:
@@ -304,19 +299,20 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("VarDeclarationPrime")
         if self.token_string == "[":    #first
+            self.enter_node("VarDeclarationPrime")
             self.match("[")
             self.match_num()
             self.match("]")
             self.match(";")
+            self.exit_node()
         elif self.token_string == ";":
+            self.enter_node("VarDeclarationPrime")
             self.match(";")
+            self.exit_node()
         elif self.token_string in {"(", "{", "}", "break", "if", "while", "return", "int", "void", "+", "-", "$"} or self.token_type in {"ID", "NUM"}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing VarDeclarationPrime")
-        self.exit_node()
 
     def FunDeclarationPrime(self):
         while self.token_string not in {";", "(", "{", "}", "break", "if", "while", "return", "int", "void", "+", "-", "$"} and self.token_type not in {"ID", "NUM"}:
@@ -324,17 +320,16 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("FunDeclarationPrime")
         if self.token_string == "(":    #first
+            self.enter_node("FunDeclarationPrime")
             self.match("(")
             self.Params()
             self.match(")")
             self.CompoundStmt()
+            self.exit_node()
         elif self.token_string in {";", "{", "}", "break", "if", "while", "return", "int", "void", "+", "-", "$"} or self.token_type in {"ID", "NUM"}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing FunDeclarationPrime")
-        self.exit_node()
 
     def TypeSpecifier(self):
         while self.token_string not in {"int", "void"} and self.token_type not in {"ID"}:
@@ -344,16 +339,17 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("TypeSpecifier")
         if self.token_string == "int":    # first
+            self.enter_node("TypeSpecifier")
             self.match("int")
+            self.exit_node()
         elif self.token_string == "void":    # first
+            self.enter_node("TypeSpecifier")
             self.match("void")
+            self.exit_node()
         elif self.token_type == "ID":   # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing TypeSpecifier")
-        self.exit_node()
 
     def Params(self):
         while self.token_string not in {"int", "void", ")"}:
@@ -363,19 +359,20 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # print(self.line_number, self.token_string)
             self.update_token()
-        self.enter_node("Params")
         if self.token_string == "int":    # first
+            self.enter_node("Params")
             self.match("int")
             self.match_id()
             self.ParamPrime()
             self.ParamList()
+            self.exit_node()
         elif self.token_string == "void":    # first
+            self.enter_node("Params")
             self.match("void")
+            self.exit_node()
         elif self.token_string == ")":   # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing Params")
-        self.exit_node()
 
     def ParamList(self):
         while self.token_string not in {",", ")"}:
@@ -385,7 +382,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("ParamList")
         if self.token_string in {","}:    # first
@@ -404,15 +400,14 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("Param")
         if self.token_string in {"int", "void"}:    # first
+            self.enter_node("Param")
             self.DeclarationInitial()
             self.ParamPrime()
+            self.exit_node()
         elif self.token_string in {",", ")"}:   # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing Param")
-        self.exit_node()
 
     def ParamPrime(self):
         while self.token_string not in {"[", ",", ")"}:
@@ -422,7 +417,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("ParamPrime")
         if self.token_string == "[":    # first
@@ -438,17 +432,16 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("CompoundStmt")
         if self.token_string == "{":    #first
+            self.enter_node("CompoundStmt")
             self.match("{")
             self.DeclarationList()
             self.StatementList()
             self.match("}")
+            self.exit_node()
         elif self.token_string in {";", "}", "break", "if", "while", "return", "int", "void", "else", "+", "-", "$"} or self.token_type in {"ID", "NUM"}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing CompoundStmt")
-        self.exit_node()
 
     def StatementList(self):
         while self.token_string not in {"{", "}", ";", "break", "if", "while", "return", "+", "-", "("} and self.token_type not in {"ID", "NUM"}:
@@ -458,7 +451,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("StatementList")
         if self.token_string in {"{", ";", "break", "if", "while", "return", "+", "-", "("} or self.token_type in {"ID", "NUM"}:    # first
@@ -476,22 +468,29 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("Statement")
         if self.token_string in {";", "(", "break", "+", "-"} or self.token_type in {"ID", "NUM"}:    #first
+            self.enter_node("Statement")
             self.ExpressionStmt()
+            self.exit_node()
         elif self.token_string == "{":
+            self.enter_node("Statement")
             self.CompoundStmt()
+            self.exit_node()
         elif self.token_string == "if":
+            self.enter_node("Statement")
             self.SelectionStmt()
+            self.exit_node()
         elif self.token_string == "while":
+            self.enter_node("Statement")
             self.IterationStmt()
+            self.exit_node()
         elif self.token_string == "return":
+            self.enter_node("Statement")
             self.ReturnStmt()
+            self.exit_node()
         elif self.token_string in {"}", "else"}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing Statement")
-        self.exit_node()
 
     def ExpressionStmt(self):
         while self.token_string not in {";", "(", "{", "}", "break", "if", "while", "return", "else", "+", "-"} and self.token_type not in {"ID", "NUM"}:
@@ -501,20 +500,23 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("ExpressionStmt")
         if self.token_string in {"(", "+", "-"} or self.token_type in {"ID", "NUM"}:    #first
+            self.enter_node("ExpressionStmt")
             self.Expression()
             self.match(";")
+            self.exit_node()
         elif self.token_string == "break":
+            self.enter_node("ExpressionStmt")
             self.match("break")
             self.match(";")
+            self.exit_node()
         elif self.token_string == ";":
+            self.enter_node("ExpressionStmt")
             self.match(";")
+            self.exit_node()
         elif self.token_string in {"{", "}", "if", "while", "return", "else"}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing ExpressionStmt")
-        self.exit_node()
     
     def SelectionStmt(self):
         while self.token_string not in {";", "(", "{", "}", "break", "if", "while", "return", "else", "+", "-"} and self.token_type not in {"ID", "NUM"}:
@@ -524,10 +526,9 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("SelectionStmt")
         if self.token_string == "if":
+            self.enter_node("SelectionStmt")
             self.match("if")
             self.match("(")
             self.Expression()
@@ -535,9 +536,9 @@ class Parser:
             self.Statement()
             self.match("else")
             self.Statement()
+            self.exit_node()
         elif self.token_string in {";", "(", "{", "}", "break", "while", "return", "else", "+", "-"} or self.token_type in {"ID", "NUM"}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing SelectionStmt")
-        self.exit_node()
 
     def IterationStmt(self):
         while self.token_string not in {";", "(", "{", "}", "break", "if", "while", "return", "else", "+", "-"} and self.token_type not in {"ID", "NUM"}:
@@ -547,18 +548,17 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("IterationStmt")
         if self.token_string == "while":
+            self.enter_node("IterationStmt")
             self.match("while")
             self.match("(")
             self.Expression()
             self.match(")")
             self.Statement()
+            self.exit_node()
         elif self.token_string in {";", "(", "{", "}", "break", "if", "return", "else", "+", "-"} or self.token_type in {"ID", "NUM"}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing IterationStmt")
-        self.exit_node()
 
     def ReturnStmt(self):
         while self.token_string not in {";", "(", "{", "}", "break", "if", "while", "return", "else", "+", "-"} and self.token_type not in {"ID", "NUM"}:
@@ -568,15 +568,14 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("ReturnStmt")
         if self.token_string == "return":
+            self.enter_node("ReturnStmt")
             self.match("return")
             self.ReturnStmtPrime()
+            self.exit_node()
         elif self.token_string in {";", "(", "{", "}", "break", "if", "while", "else", "+", "-"} or self.token_type in {"ID", "NUM"}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing ReturnStmt")
-        self.exit_node()
 
 
     def ReturnStmtPrime(self):
@@ -587,17 +586,18 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("ReturnStmtPrime")
         if self.token_string in {"(", "+", "-"} or self.token_type in {"ID", "NUM"}:    #first
+            self.enter_node("ReturnStmtPrime")
             self.Expression()
             self.match(";")
+            self.exit_node()
         elif self.token_string == ";":
+            self.enter_node("ReturnStmtPrime")
             self.match(";")
+            self.exit_node()
         elif self.token_string in {"{", "}", "if", "while", "return", "else", "break"}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing ReturnStmtPrime")
-        self.exit_node()
     
     def Expression(self):
         while self.token_string not in {"(",")", ";", "]", ",", "+", "-"} and self.token_type not in {"ID", "NUM"}:
@@ -607,17 +607,18 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("Expression")
         if self.token_string in {"(", "+", "-"} or self.token_type in {"NUM"}:    #first
+            self.enter_node("Expression")
             self.SimpleExpressionZegond()
+            self.exit_node()
         elif self.token_type == "ID":
+            self.enter_node("Expression")
             self.match_id()
             self.B()
+            self.exit_node()
         elif self.token_string in {")", ";", "]", ","}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing Expression")
-        self.exit_node()
 
     def B(self):
         while self.token_string not in {"(", "*", "+", "-", "<", "==", "[", "=", ";", ",", "]", ")"}:
@@ -627,7 +628,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("B")
         if self.token_string in {"(", "*", "+", "-", "<", "=="}:    #first
@@ -652,7 +652,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("H")
         if self.token_string in {"*", "+", "-", "<", "=="}:    #first
@@ -676,15 +675,14 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("SimpleExpressionZegond")
         if self.token_string in {"+", "-", "("} or self.token_type == "NUM":    #first
+            self.enter_node("SimpleExpressionZegond")
             self.AdditiveExpressionZegond()
             self.C()
+            self.exit_node()
         elif self.token_string in {";", ",", "]", ")"}:     # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing SimpleExpressionZegond")
-        self.exit_node()
 
     def SimpleExpressionPrime(self):
         while self.token_string not in {"(", "*", "+", "-", "<", "==", ";", ",", "]", ")"}:
@@ -694,7 +692,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("SimpleExpressionPrime")
         if self.token_string in {"(", "*", "+", "-", "<", "=="}:    #first
@@ -713,7 +710,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("C")
         if self.token_string in {"<", "=="}:    #first
@@ -731,16 +727,17 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("Relop")
         if self.token_string == "<":    #first
+            self.enter_node("Relop")
             self.match("<")
+            self.exit_node()
         elif self.token_string == "==":
+            self.enter_node("Relop")
             self.match("==")
+            self.exit_node()
         elif self.token_string in {"+", "-", "("} or self.token_type in {"ID", "NUM"}:     # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing Relop")
-        self.exit_node()
 
     def AdditiveExpression(self):
         while self.token_string not in {";", ",", "]", ")", "+", "-", "("} and self.token_type not in {"ID", "NUM"}:
@@ -750,15 +747,14 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("AdditiveExpression")
         if self.token_string in {"+", "-", "("} or self.token_type in {"ID", "NUM"}:    #first
+            self.enter_node("AdditiveExpression")
             self.Term()
             self.D()
+            self.exit_node()
         elif self.token_string in {";", ",", "]", ")"}:     # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing AdditiveExpression")
-        self.exit_node()
 
     def AdditiveExpressionPrime(self):
         while self.token_string not in {";", ",", "]", ")", "<", "==", "*", "+", "-", "("}:
@@ -768,7 +764,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("AdditiveExpressionPrime")
         if self.token_string in {"*", "+", "-", "("}:    #first
@@ -787,15 +782,14 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("AdditiveExpressionZegond")
         if self.token_string in {"+", "-", "("} or self.token_type in {"NUM"}:    #first
+            self.enter_node("AdditiveExpressionZegond")
             self.TermZegond()
             self.D()
+            self.exit_node()
         elif self.token_string in {";", ",", "]", ")", "<", "=="}:     # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing AdditiveExpressionZegond")
-        self.exit_node()
     
     def D(self):
         while self.token_string not in {";", ",", "]", ")", "<", "==", "+", "-"}:
@@ -805,7 +799,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("D")
         if self.token_string in {"+", "-"}:    #first
@@ -824,16 +817,17 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("Addop")
         if self.token_string == "+":    #first
+            self.enter_node("Addop")
             self.match("+")
+            self.exit_node()
         elif self.token_string == "-":
+            self.enter_node("Addop")
             self.match("-")
+            self.exit_node()
         elif self.token_string in {"("} or self.token_type in {"ID", "NUM"}:     # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing Addop")
-        self.exit_node()
 
     def Term(self):
         while self.token_string not in {"+", "-", "(", ";", ",", "]", ")", "<", "=="} and self.token_type not in {"ID", "NUM"}:
@@ -843,15 +837,14 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("Term")
         if self.token_string in {"(", "+", "-"} or self.token_type in {"ID", "NUM"}:    #first
+            self.enter_node("Term")
             self.SignedFactor()
             self.G()
+            self.exit_node()
         elif self.token_string in {";", ",", "]", ")", "<", "=="}:     # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing Term")
-        self.exit_node()
 
     def TermPrime(self):
         while self.token_string not in {"+", "-", "(", ";", ",", "]", ")", "<", "==", "*"}:
@@ -861,7 +854,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("TermPrime")
         if self.token_string in {"(", "*"}:    #first
@@ -880,15 +872,14 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("TermZegond")
         if self.token_string in {"(", "+", "-"} or self.token_type in {"NUM"}:    #first
+            self.enter_node("TermZegond")
             self.SignedFactorZegond()
             self.G()
+            self.exit_node()
         elif self.token_string in {";", ",", "]", ")", "<", "=="}:     # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing TermZegond")
-        self.exit_node()
     
     def G(self):
         while self.token_string not in {";", ",", "]", ")", "<", "==", "+", "-", "*"}:
@@ -898,7 +889,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("G")
         if self.token_string == "*":    #first
@@ -917,20 +907,23 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("SignedFactor")
         if self.token_string == "+":    #first
+            self.enter_node("SignedFactor")
             self.match("+")
             self.Factor()
+            self.exit_node()
         elif self.token_string == "-":
+            self.enter_node("SignedFactor")
             self.match("-")
             self.Factor()
+            self.exit_node()
         elif self.token_string == "(" or self.token_type in {"ID", "NUM"}:
+            self.enter_node("SignedFactor")
             self.Factor()
+            self.exit_node()
         elif self.token_string in {";", ",", "]", ")", "<", "==", "*"}:     # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing SignedFactor")
-        self.exit_node()
 
     def SignedFactorPrime(self):
         while self.token_string not in {";", ",", "]", ")", "<", "==", "+", "-", "*", "("}:
@@ -940,7 +933,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("SignedFactorPrime")
         if self.token_string == "(":    #first
@@ -957,20 +949,23 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("SignedFactorZegond")
         if self.token_string == "+":    #first
+            self.enter_node("SignedFactorZegond")
             self.match("+")
             self.Factor()
+            self.exit_node()
         elif self.token_string == "-":
+            self.enter_node("SignedFactorZegond")
             self.match("-")
             self.Factor()
+            self.exit_node()
         elif self.token_string == "(" or self.token_type in {"NUM"}:
+            self.enter_node("SignedFactorZegond")
             self.FactorZegond()
+            self.exit_node()
         elif self.token_string in {";", ",", "]", ")", "<", "==", "*"}:     # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing SignedFactorZegond")
-        self.exit_node()
 
     def Factor(self):
         while self.token_string not in {";", ",", "]", ")", "<", "==", "*", "+", "-", "("} and self.token_type not in {"ID", "NUM"}:
@@ -980,21 +975,24 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("Factor")
         if self.token_string == "(":    #first
+            self.enter_node("Factor")
             self.match("(")
             self.Expression()
             self.match(")")
+            self.exit_node()
         elif self.token_type == "ID":
+            self.enter_node("Factor")
             self.match_id()
             self.VarCallPrime()
+            self.exit_node()
         elif self.token_type == "NUM":
+            self.enter_node("Factor")
             self.match_num()
+            self.exit_node()
         elif self.token_string in {";", ",", "]", ")", "<", "==", "*", "+", "-"}:     # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing Factor")
-        self.exit_node()
 
     def VarCallPrime(self):
         while self.token_string not in {";", ",", "]", ")", "<", "==", "*", "+", "-", "(", "["}:
@@ -1004,7 +1002,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("VarCallPrime")
         if self.token_string == "(":    #first
@@ -1025,7 +1022,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("VarPrime")
         if self.token_string == "[":    # first
@@ -1044,7 +1040,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("FactorPrime")
         if self.token_string == "(":    # first
@@ -1063,18 +1058,19 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("FactorZegond")
         if self.token_string == "(":    # first
+            self.enter_node("FactorZegond")
             self.match("(")
             self.Expression()
             self.match(")")
+            self.exit_node()
         elif self.token_type == "NUM":
+            self.enter_node("FactorZegond")
             self.match_num()
+            self.exit_node()
         elif self.token_string in {";", ",", "]", ")", "<", "==", "*", "+", "-"}:     # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing FactorZegond")
-        self.exit_node()
 
     def Args(self):
         while self.token_string not in {"+", "-", "(", ")"} and self.token_type not in {"ID", "NUM"}:
@@ -1084,7 +1080,6 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("Args")
         if self.token_string in {"+", "-", "("} or self.token_type in {"ID", "NUM"}:    # first
@@ -1101,26 +1096,23 @@ class Parser:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
-        self.enter_node("ArgList")
         if self.token_string in {"+", "-", "("} or self.token_type in {"ID", "NUM"}:    # first
+            self.enter_node("ArgList")
             self.Expression()
             self.ArgListPrime()
+            self.exit_node()
         elif self.token_string in {")"}:     # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing ArgList")
-        self.exit_node()
 
     def ArgListPrime(self):
         while self.token_string not in {",", ")"}:
             if self.token_string == "$":
                 return
-            # print(self.token_string)
             if self.token_type in {"ID", "NUM"}:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_type}")
             else:
                 self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
-            # self.parser_errors.append(f"#{self.line_number} : syntax error, illegal {self.token_string}")
             self.update_token()
         self.enter_node("ArgListPrime")
         if self.token_string in {","}:    # first
@@ -1134,8 +1126,6 @@ class Parser:
     #------------------------------------------------ Parsing
     def parse(self):
         self.Program()
-        if self.token_string != "$":
-            self.parser_errors.append(f"Syntax Error: Unexpected token '{self.token_string}' after program end at line {self.line_number}")
         self.make_tree("parse_tree.txt")
         with open("syntax_errors.txt", "w", encoding="utf-8") as f:
             if self.parser_errors:
