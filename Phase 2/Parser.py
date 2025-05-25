@@ -151,7 +151,6 @@ class Parser:
             self.token_string_start = self.index
             self.line_number = self.index_to_line[self.token_string_start]
             self.index, self.token_type, self.token_string, self.scanner_error_msg = get_next_token(self.index, text)
-            # print(self.token_string)
             while self.scanner_error_msg is not None or self.token_type == "COMMENT":
                 while self.index < len(text) and text[self.index] in WSPACE:
                     self.index += 1
@@ -174,7 +173,7 @@ class Parser:
         self.stack.append(node)
 
     def exit_node(self):
-        out = self.stack.pop()
+        self.stack.pop()
 
     def match(self, expected_string):
         if self.token_string == expected_string:
@@ -224,7 +223,7 @@ class Parser:
             output.append("└── $")
         else:
             output.append("")
-            self.parser_errors.append(f"#{self.line_number} : syntax error, Unexpected EOF")
+            self.parser_errors.append(f"#{self.line_number + 1} : syntax error, Unexpected EOF")
         with open(filename, "w", encoding="utf-8") as fp:
             fp.write("\n".join(output))
 
