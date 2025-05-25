@@ -201,35 +201,33 @@ class Parser:
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing NUM")
 
     def make_tree(self, filename):
-        def _print_tree(node, prefix="", is_last=True, is_root=False):
+        def _render(node, prefix="", is_last=True, is_root=False):
             if is_root:
                 line = node.label
             else:
                 connector = "└── " if is_last else "├── "
-                line = prefix + connector + node.label
+                line = f"{prefix}{connector}{node.label}"
             lines = [line]
-            new_prefix = prefix + ("    " if is_last else "│   ")
-            for i, child in enumerate(node.children):
-                lines.extend(_print_tree(child, new_prefix, i == len(node.children) - 1))
+            next_prefix = prefix + ("    " if is_last else "│   ")
+            for idx, child in enumerate(node.children):
+                last_child = (idx == len(node.children) - 1)
+                lines += _render(child, next_prefix, last_child)
             return lines
-
-        # Print root label
-        lines = [self.root.label]
-        # Top-level children use '├── ' connector and no indent
-        for child in self.root.children:
-            if self.eof == False:
-                lines.extend(_print_tree(child, "", False, is_root=False))
-            elif self.eof == True:
-                lines.extend(_print_tree(child, "", True, is_root=False))
-        # Append end-of-input marker
-        if self.eof == False:
-            lines.append("└── $\n")
-        elif self.eof == True:
-            lines.append("\n")
+        
+        output = [_render(self.root, is_root=True)[0]]
+        total = len(self.root.children)
+        for i, child in enumerate(self.root.children):
+            # is_last = self.eof or (i == total - 1)
+            is_last = self.eof
+            output += _render(child, "", is_last)
+        if not self.eof:
+            output.append("└── $")
+        else:
+            output.append("")
             self.parser_errors.append(f"#{self.line_number} : syntax error, Unexpected EOF")
+        with open(filename, "w", encoding="utf-8") as fp:
+            fp.write("\n".join(output))
 
-        with open(filename, "w", encoding="utf-8") as f:
-            f.write("\n".join(lines))
 
     #------------------------------- Grammer DFAs
     
