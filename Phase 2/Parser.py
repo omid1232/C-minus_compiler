@@ -134,7 +134,7 @@ class Parser:
             self.token_string = "$"
         self.token_string_start = self.index
         self.line_number = self.index_to_line[self.token_string_start]
-        self.index, self.token_type, self.token_string, _ = get_next_token(self.index, text)
+        self.index, self.token_type, self.token_string, self.scanner_error_msg = get_next_token(self.index, text)
 
         self.parser_errors = []
         self.root = None
@@ -147,9 +147,22 @@ class Parser:
         if self.index >= len(text):
             self.token_string = "$"
         else:
+
             self.token_string_start = self.index
             self.line_number = self.index_to_line[self.token_string_start]
-            self.index, self.token_type, self.token_string, _ = get_next_token(self.index, text)
+            self.index, self.token_type, self.token_string, self.scanner_error_msg = get_next_token(self.index, text)
+            # print(self.token_string)
+            while self.scanner_error_msg is not None or self.token_type == "COMMENT":
+                while self.index < len(text) and text[self.index] in WSPACE:
+                    self.index += 1
+                if self.index >= len(text):
+                    self.token_string = "$"
+                self.token_string_start = self.index
+                self.line_number = self.index_to_line[self.token_string_start]
+                self.index, self.token_type, self.token_string, self.scanner_error_msg = get_next_token(self.index, text)
+                if self.token_type == "$":
+                    self.token_string = "$"
+
     
     def make_node(self, label):
         node = Node(label)
