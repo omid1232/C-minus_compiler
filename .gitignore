@@ -1,5 +1,12 @@
 testcases_phase1/
 input.txt
+parse_tree.txt
+syntax_errors.txt
 lexical_errors.txt
 symbol_table.txt
 tokens.txt
+testcase/
+test.py
+__pycache__/
+grammar
+grammar2.py
