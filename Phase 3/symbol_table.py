@@ -1,8 +1,11 @@
-class Symbol:
-    def __init__(self, lexeme, type, scope):
+class ID_entry:
+    def __init__(self, lexeme, type, role, arg_num, scope, address):
         self.lexeme = lexeme
         self.type = type
+        self.role = role
+        self.arg_num = arg_num
         self.scope = scope
+        self.address = address
 
 
 class ScopeStack:
@@ -25,14 +28,19 @@ class ScopeStack:
 
 class SymbolTable:
     def __init__(self):
+        self.is_declaration = False
         self.symbols = []
         self.scopeStack = ScopeStack()
 
-    def add_symbol(self, lexeme, type):
+    def add_symbol(self, lexeme):
         current_scope = self.scopeStack.get_scope()
         if current_scope is not None:
-            symbol = Symbol(lexeme, type, current_scope)
-            self.symbols.append(symbol)
+            if self.is_declaration == True:
+                symbol = ID_entry(lexeme, None, None, None, current_scope, None)
+                self.symbols.append(symbol)
+            else:
+                if self.lookup(lexeme) is None:
+                    symbol = ID_entry(lexeme, None, None, None, current_scope, None)
 
     def lookup(self, lexeme):
         for symbol in reversed(self.symbols):
