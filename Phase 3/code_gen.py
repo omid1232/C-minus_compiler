@@ -1,3 +1,5 @@
+from symbol_table import SymbolTable
+
 class SemanticStack:
     def __init__(self):
         self.stack = []
@@ -17,7 +19,8 @@ class SemanticStack:
 
 class CodeGen:
     def __init__(self):
-        pass
+        self.semantic_stack = SemanticStack()
+        self.symbol_table = SymbolTable()
 
     def declare():
         pass
