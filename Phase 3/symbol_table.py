@@ -38,9 +38,11 @@ class SymbolTable:
             if self.is_declaration == True:
                 symbol = ID_entry(lexeme, None, None, None, current_scope, None)
                 self.symbols.append(symbol)
+                self.is_declaration = False
             else:
                 if self.lookup(lexeme) is None:
                     symbol = ID_entry(lexeme, None, None, None, current_scope, None)
+                    self.symbols.append(symbol)
 
     def lookup(self, lexeme):
         for symbol in reversed(self.symbols):
