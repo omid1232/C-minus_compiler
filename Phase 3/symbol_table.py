@@ -46,9 +46,11 @@ class SymbolTable:
             if self.is_declaration == True:
                 symbol = ID_entry(lexeme, None, "variable", None, current_scope, self.info.get_address())
                 self.symbols.append(symbol)
+                self.is_declaration = False
             else:
                 if self.lookup(lexeme) is None:
                     symbol = ID_entry(lexeme, None, "variable", None, current_scope, self.info.get_address())
+                    self.symbols.append(symbol)
             self.info.increase_address(lexeme)
 
     def add_empty_symbol_type(self, type):
