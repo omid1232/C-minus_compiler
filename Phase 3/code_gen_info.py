@@ -1,35 +1,36 @@
 class CodeGenInfo:
     def __init__(self):
-        self.address = 100  # Starting address for variables
-        self.temp = 500  # Starting address for temporary variables
-        self.func_arg_num = 0
-        self.counting_func_arg = False
+        self.word_size = 4
+        self.data_address = 100  # Starting address for variables
+        self.temp_address = 500  # Starting address for temporary variables
+        self.last_used_id = None
+        self.func_arg_num = 0    # how many parameters a function has
+        self.arg_declaration = False    # wether we are declaring function parameters
+        self.program_block = []
+        self.pb_i = 0
+        self.return_address = 0
+        self.return_value = 0
 
-    def increase_address(self, lexeme):
-        # Increase address by 4 for each new variable
-        self.address += 4
+    def increase_data_address(self, size):
+        self.data_address += size
 
-    def get_address(self):
-        return self.address
+    def get_data_address(self):
+        return self.data_address
         
-    def increase_temp(self):
-        # Increase temp address by 4 for each new temporary variable
-        self.temp += 4
+    def increase_temp_address(self, size):
+        self.temp += size
 
-    def get_temp(self):
-        return self.temp
+    def get_temp_address(self):
+        return self.temp_address
 
     def inc_func_arg_num(self):
         self.func_arg_num += 1
 
     def reset_func_arg_num(self):
         self.func_arg_num = 0
-
-    def get_func_arg_num(self):
-        return self.func_arg_num
     
-    def set_counting_func_arg(self, value):
-        self.counting_func_arg = value
+    def set_arg_declaration(self, arg_declaration):
+        self.arg_declaration = arg_declaration
 
-    def get_counting_func_arg(self):
-        return self.counting_func_arg
+    def get_arg_declaration(self):
+        return self.arg_declaration
