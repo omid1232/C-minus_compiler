@@ -1,11 +1,9 @@
-from code_gen_info import CodeGenInfo
-
 class ID_entry:
     def __init__(self, lexeme, type, role, arg_num, scope, address):
         """
         type: [int, void]
-        role: [variable, array, function]
-        arg_num is int
+        role: [var, arr, func]
+        arg_num for function param count, for array element count
         """
         self.lexeme = lexeme
         self.type = type
@@ -38,52 +36,37 @@ class SymbolTable:
         self.is_declaration = False
         self.symbols = []
         self.scopeStack = ScopeStack()
-        self.info = CodeGenInfo()
 
-    def add_symbol(self, lexeme):
+    def add_symbol(self, lexeme, type, address):
         current_scope = self.scopeStack.get_scope()
         if current_scope is not None:
             if self.is_declaration == True:
-                symbol = ID_entry(lexeme, None, "variable", None, current_scope, self.info.get_address())
+                symbol = ID_entry(lexeme, type, "var", None, current_scope, address)
                 self.symbols.append(symbol)
                 self.is_declaration = False
             else:
                 if self.lookup(lexeme) is None:
-                    symbol = ID_entry(lexeme, None, "variable", None, current_scope, self.info.get_address())
+                    symbol = ID_entry(lexeme, None, "var", None, current_scope, address)
                     self.symbols.append(symbol)
-            self.info.increase_address(lexeme)
-
-    def add_empty_symbol_type(self, type):
-        current_scope = self.scopeStack.get_scope()
-        if current_scope is not None:
-            symbol = ID_entry(None, type, None, None, current_scope, self.info.get_address())
-            # update address on add_symbol_lexeme
-            self.symbols.append(symbol)
-
-    def add_symbol_lexeme(self, lexeme):
-        # add lexeme to the last symbol in the symbols list (for declaration)
-        symbol = self.symbols[-1] if self.symbols else None
-        if symbol is not None:
-            symbol.lexeme = lexeme
-            self.info.increase_address(lexeme)
 
     def change_to_array(self, arg_num):
         #change last symbol to array
         symbol = self.symbols[-1] if self.symbols else None
         if symbol is not None:
-            symbol.role = 'array'
+            symbol.role = 'arr'
             symbol.arg_num = arg_num
 
-    def change_to_func(self):
+    def change_to_func(self, address):
         #change last symbol to function
         symbol = self.symbols[-1] if self.symbols else None
         if symbol is not None:
-            symbol.role = 'function'
+            symbol.address = address
+            symbol.role = 'func'
             symbol.arg_num = 0
 
     def update_function_arg_num(self, arg_num):
         symbol = self.symbols[-1] if self.symbols else None
-        if symbol is not None and symbol.role == 'function':
+        if symbol is not None and symbol.role == 'func':
             symbol.arg_num = arg_num
 
     def lookup(self, lexeme):
