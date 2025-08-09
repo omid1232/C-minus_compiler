@@ -1,15 +1,15 @@
 1. Program -> DeclarationList  
 2. DeclarationList -> Declaration DeclarationList | EPSILON  
 3. Declaration -> #declare DeclarationInitial DeclarationPrime  
-4. DeclarationInitial -> #push_type TypeSpecifier #declare_id #pid ID  
+4. DeclarationInitial -> #push_type TypeSpecifier #declare_id ID  
 5. DeclarationPrime -> FunDeclarationPrime | VarDeclarationPrime  
 6. VarDeclarationPrime -> ; | [ #pnum NUM ] #declare_arr ;  
 7. FunDeclarationPrime -> #declare_func ( #params_start Params #params_end ) CompoundStmt #func_return
 8. TypeSpecifier -> int | void  
-9. Params -> #push_type int #declare_id #pid ID ParamPrime ParamList | void  
+9. Params -> #push_type int #declare_id ID ParamPrime ParamList | void  
 10. ParamList -> , Param ParamList | EPSILON  
 11. Param -> #declare DeclarationInitial ParamPrime  
-12. ParamPrime -> [ ] | EPSILON  
+12. ParamPrime -> [ ] #declare_arr | EPSILON  
 13. CompoundStmt -> { DeclarationList StatementList }  
 14. StatementList -> Statement StatementList | EPSILON  
 15. Statement -> ExpressionStmt | CompoundStmt | SelectionStmt | IterationStmt | ReturnStmt  

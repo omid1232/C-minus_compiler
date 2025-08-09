@@ -176,11 +176,10 @@ class Parser:
             self.update_token()
         if self.token_string in {"int", "void"}:    # first
             self.enter_node("DeclarationInitial")
-            self.code_gen.push_type()
+            self.code_gen.push_type(type= self.token_string)
             self.TypeSpecifier()
+            self.code_gen.declare_id(lexeme= self.token_string)
             self.match_id()
-            self.code_gen.declare_id()
-            self.code_gen.pid()
             self.exit_node()
         elif self.token_string in {";", "[", "(", ")", ","}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing DeclarationInitial")
@@ -220,7 +219,7 @@ class Parser:
             self.code_gen.pnum(self.token_string)
             self.match_num()
             self.match("]")
-            self.code_gen.declare_arr()
+            self.code_gen.declare_arr(True)
             self.match(";")
             self.exit_node()
         elif self.token_string == ";":
@@ -286,10 +285,9 @@ class Parser:
             self.update_token()
         if self.token_string == "int":    # first
             self.enter_node("Params")
-            self.code_gen.push_type()
+            self.code_gen.push_type(type= self.token_string)
             self.match("int")
             self.code_gen.declare_id()
-            self.code_gen.pid()
             self.match_id()
             self.ParamPrime()
             self.ParamList()
@@ -353,6 +351,7 @@ class Parser:
         if self.token_string == "[":    # first
             self.match("[")
             self.match("]")
+            self.code_gen.declare_arr(False)
         elif self.token_string in {",", ")"}:  # follow
             self.make_node("epsilon")
         self.exit_node()
