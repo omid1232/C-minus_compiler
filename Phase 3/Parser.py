@@ -1,4 +1,5 @@
 from Scanner import *
+from code_gen import CodeGen
 
 # Parser Functions
 class Node:
@@ -22,6 +23,7 @@ class Parser:
         self.root = None
         self.stack = []
         self.eof = False
+        self.code_gen = CodeGen()
 
     def update_token(self):
         while self.index < len(text) and text[self.index] in WSPACE:
@@ -155,6 +157,7 @@ class Parser:
             self.update_token()
         if self.token_string in {"int", "void"}:    # first
             self.enter_node("Declaration")
+            self.code_gen.declare()
             self.DeclarationInitial()
             self.DeclarationPrime()
             self.exit_node()
@@ -173,8 +176,11 @@ class Parser:
             self.update_token()
         if self.token_string in {"int", "void"}:    # first
             self.enter_node("DeclarationInitial")
+            self.code_gen.push_type()
             self.TypeSpecifier()
             self.match_id()
+            self.code_gen.declare_id()
+            self.code_gen.pid()
             self.exit_node()
         elif self.token_string in {";", "[", "(", ")", ","}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing DeclarationInitial")
@@ -211,8 +217,10 @@ class Parser:
         if self.token_string == "[":    #first
             self.enter_node("VarDeclarationPrime")
             self.match("[")
+            self.code_gen.pnum(self.token_string)
             self.match_num()
             self.match("]")
+            self.code_gen.declare_arr()
             self.match(";")
             self.exit_node()
         elif self.token_string == ";":
@@ -233,10 +241,14 @@ class Parser:
             self.update_token()
         if self.token_string == "(":    #first
             self.enter_node("FunDeclarationPrime")
+            self.code_gen.declare_func()
             self.match("(")
+            self.code_gen.params_start()
             self.Params()
+            self.code_gen.params_end()
             self.match(")")
             self.CompoundStmt()
+            self.code_gen.func_return()
             self.exit_node()
         elif self.token_string in {";", "{", "}", "break", "if", "while", "return", "int", "void", "+", "-", "$"} or self.token_type in {"ID", "NUM"}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing FunDeclarationPrime")
@@ -274,7 +286,10 @@ class Parser:
             self.update_token()
         if self.token_string == "int":    # first
             self.enter_node("Params")
+            self.code_gen.push_type()
             self.match("int")
+            self.code_gen.declare_id()
+            self.code_gen.pid()
             self.match_id()
             self.ParamPrime()
             self.ParamList()
@@ -317,6 +332,7 @@ class Parser:
             self.update_token()
         if self.token_string in {"int", "void"}:    # first
             self.enter_node("Param")
+            self.code_gen.declare()
             self.DeclarationInitial()
             self.ParamPrime()
             self.exit_node()
@@ -451,12 +467,15 @@ class Parser:
         if self.token_string == "if":
             self.enter_node("SelectionStmt")
             self.match("if")
+            self.code_gen.save()
             self.match("(")
             self.Expression()
             self.match(")")
             self.Statement()
             self.match("else")
+            self.code_gen.jpf_save()
             self.Statement()
+            self.code_gen.jp()
             self.exit_node()
         elif self.token_string in {";", "(", "{", "}", "break", "while", "return", "else", "+", "-"} or self.token_type in {"ID", "NUM"}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing SelectionStmt")
@@ -474,10 +493,13 @@ class Parser:
         if self.token_string == "while":
             self.enter_node("IterationStmt")
             self.match("while")
+            self.code_gen.label()
             self.match("(")
             self.Expression()
             self.match(")")
+            self.code_gen.save()
             self.Statement()
+            self.code_gen.while_end()
             self.exit_node()
         elif self.token_string in {";", "(", "{", "}", "break", "if", "return", "else", "+", "-"} or self.token_type in {"ID", "NUM"}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing IterationStmt")
@@ -513,7 +535,9 @@ class Parser:
             self.update_token()
         if self.token_string in {"(", "+", "-"} or self.token_type in {"ID", "NUM"}:    #first
             self.enter_node("ReturnStmtPrime")
+            self.code_gen.pvalue()
             self.Expression()
+            self.code_gen.assign()
             self.match(";")
             self.exit_node()
         elif self.token_string == ";":
@@ -539,6 +563,7 @@ class Parser:
             self.exit_node()
         elif self.token_type == "ID":
             self.enter_node("Expression")
+            self.code_gen.pid()
             self.match_id()
             self.B()
             self.exit_node()
@@ -562,10 +587,12 @@ class Parser:
             self.match("[")
             self.Expression()
             self.match("]")
+            self.code_gen.parr()
             self.H()
         elif self.token_string == "=":
             self.match("=")
             self.Expression()
+            self.code_gen.assign()
         elif self.token_string in {";", ",", "]", ")"}:     # follow
             self.SimpleExpressionPrime()
         self.exit_node()
@@ -588,6 +615,7 @@ class Parser:
         elif self.token_string == "=":
             self.match("=")
             self.Expression()
+            self.code_gen.assign()
         elif self.token_string in {";", ",", "]", ")"}:     # follow
             self.G()
             self.D()
@@ -645,6 +673,7 @@ class Parser:
         if self.token_string in {"<", "=="}:    #first
             self.Relop()
             self.AdditiveExpression()
+            self.code_gen.math_exec()
         elif self.token_string in {";", ",", "]", ")"}:     # follow
             self.make_node("epsilon")
         self.exit_node()
@@ -661,10 +690,12 @@ class Parser:
             self.update_token()
         if self.token_string == "<":    #first
             self.enter_node("Relop")
+            self.code_gen.push_op()
             self.match("<")
             self.exit_node()
         elif self.token_string == "==":
             self.enter_node("Relop")
+            self.code_gen.push_op()
             self.match("==")
             self.exit_node()
         elif self.token_string in {"+", "-", "("} or self.token_type in {"ID", "NUM"}:     # synch
@@ -739,6 +770,7 @@ class Parser:
         if self.token_string in {"+", "-"}:    #first
             self.Addop()
             self.Term()
+            self.code_gen.math_exec()
             self.D()
         elif self.token_string in {";", ",", "]", ")", "<", "=="}:     # follow
             self.make_node("epsilon")
@@ -756,10 +788,12 @@ class Parser:
             self.update_token()
         if self.token_string == "+":    #first
             self.enter_node("Addop")
+            self.code_gen.push_op()
             self.match("+")
             self.exit_node()
         elif self.token_string == "-":
             self.enter_node("Addop")
+            self.code_gen.push_op()
             self.match("-")
             self.exit_node()
         elif self.token_string in {"("} or self.token_type in {"ID", "NUM"}:     # synch
@@ -832,8 +866,10 @@ class Parser:
             self.update_token()
         self.enter_node("G")
         if self.token_string == "*":    #first
+            self.code_gen.push_op()
             self.match("*")
             self.SignedFactor()
+            self.code_gen.math_exec()
             self.G()
         elif self.token_string in {";", ",", "]", ")", "<", "==", "+", "-"}:     # follow
             self.make_node("epsilon")
@@ -856,8 +892,11 @@ class Parser:
             self.exit_node()
         elif self.token_string == "-":
             self.enter_node("SignedFactor")
+            self.code_gen.p0()
+            self.code_gen.push_op()
             self.match("-")
             self.Factor()
+            self.code_gen.math_exec()
             self.exit_node()
         elif self.token_string == "(" or self.token_type in {"ID", "NUM"}:
             self.enter_node("SignedFactor")
@@ -900,8 +939,11 @@ class Parser:
             self.exit_node()
         elif self.token_string == "-":
             self.enter_node("SignedFactorZegond")
+            self.code_gen.p0()
+            self.code_gen.push_op()
             self.match("-")
             self.Factor()
+            self.code_gen.math_exec()
             self.exit_node()
         elif self.token_string == "(" or self.token_type in {"NUM"}:
             self.enter_node("SignedFactorZegond")
@@ -928,11 +970,13 @@ class Parser:
             self.exit_node()
         elif self.token_type == "ID":
             self.enter_node("Factor")
+            self.code_gen.pid()
             self.match_id()
             self.VarCallPrime()
             self.exit_node()
         elif self.token_type == "NUM":
             self.enter_node("Factor")
+            self.code_gen.pnum()
             self.match_num()
             self.exit_node()
         elif self.token_string in {";", ",", "]", ")", "<", "==", "*", "+", "-"}:     # synch
@@ -951,8 +995,11 @@ class Parser:
         self.enter_node("VarCallPrime")
         if self.token_string == "(":    #first
             self.match("(")
+            self.code_gen.args_start()
             self.Args()
+            self.code_gen.args_end()
             self.match(")")
+            self.code_gen.func_call()
         elif self.token_string == "[":
             self.VarPrime()
         elif self.token_string in {";", ",", "]", ")", "<", "==", "*", "+", "-"}:     # follow
@@ -974,6 +1021,7 @@ class Parser:
             self.match("[")
             self.Expression()
             self.match("]")
+            self.code_gen.parr()
         elif self.token_string in {";", ",", "]", ")", "<", "==", "*", "+", "-"}:     # follow
             self.make_node("epsilon")
         self.exit_node()
@@ -991,8 +1039,11 @@ class Parser:
         self.enter_node("FactorPrime")
         if self.token_string == "(":    # first
             self.match("(")
+            self.code_gen.args_start()
             self.Args()
+            self.code_gen.args_end()
             self.match(")")
+            self.code_gen.func_call()
         elif self.token_string in {";", ",", "]", ")", "<", "==", "*", "+", "-"}:     # follow
             self.make_node("epsilon")
         self.exit_node()
@@ -1015,6 +1066,7 @@ class Parser:
             self.exit_node()
         elif self.token_type == "NUM":
             self.enter_node("FactorZegond")
+            self.code_gen.pnum()
             self.match_num()
             self.exit_node()
         elif self.token_string in {";", ",", "]", ")", "<", "==", "*", "+", "-"}:     # synch
