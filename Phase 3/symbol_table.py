@@ -93,7 +93,7 @@ class SymbolTable:
         return None
 
     def enter_scope(self):
-        self.scopeStack.push()
+        self.scopeStack.push(len(self.symbols))
 
     def exit_scope(self):
         current_scope = self.scopeStack.get_scope()
