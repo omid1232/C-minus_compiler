@@ -1,5 +1,5 @@
 class ID_entry:
-    def __init__(self, lexeme, type, role, arg_num, scope, address):
+    def __init__(self, lexeme, type, role, arg_num, scope, address, jmp_add):
         """
         type: [int, void]
         role: [var, arr, func]
@@ -11,6 +11,7 @@ class ID_entry:
         self.arg_num = arg_num
         self.scope = scope
         self.address = address
+        self.jmp_add = jmp_add
 
 
 class ScopeStack:
@@ -41,12 +42,12 @@ class SymbolTable:
         current_scope = self.scopeStack.get_scope()
         if current_scope is not None:
             if self.is_declaration == True:
-                symbol = ID_entry(lexeme, type, "var", None, current_scope, address)
+                symbol = ID_entry(lexeme, type, "var", None, current_scope, address, None)
                 self.symbols.append(symbol)
                 self.is_declaration = False
             else:
                 if self.lookup(lexeme) is None:
-                    symbol = ID_entry(lexeme, None, "var", None, current_scope, address)
+                    symbol = ID_entry(lexeme, None, "var", None, current_scope, address, None)
                     self.symbols.append(symbol)
 
     def change_to_array(self, arg_num):
@@ -56,11 +57,12 @@ class SymbolTable:
             symbol.role = 'arr'
             symbol.arg_num = arg_num
 
-    def change_to_func(self, address):
+    def change_to_func(self, jmp_add):
         #change last symbol to function
         symbol = self.symbols[-1] if self.symbols else None
         if symbol is not None:
-            symbol.address = address
+            symbol.jmp_add = symbol.address
+            symbol.address = jmp_add
             symbol.role = 'func'
             symbol.arg_num = 0
 
