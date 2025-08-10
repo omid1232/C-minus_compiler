@@ -6,8 +6,10 @@ class CodeGenInfo:
         self.last_used_id = None
         self.func_arg_num = 0    # how many parameters a function has
         self.arg_declaration = False    # wether we are declaring function parameters
+        self.arg_start_pointer = 0 #start of arg pushed in to stack for function call
         self.program_block = []
         self.pb_i = 0
+        self.current_func = None
         self.return_address = 0
         self.return_value = 0
 
