@@ -23,6 +23,7 @@ class CodeGen:
         self.semantic_stack = SemanticStack()
         self.symbol_table = SymbolTable()
         self.info = CodeGenInfo()
+        self.ops = {'+': 'ADD', '-': 'SUB', '*': 'MULT', '<': 'LT', '==': 'EQ'}
 
     #semantic actions
     def declare(self):
@@ -44,6 +45,8 @@ class CodeGen:
         id_entry = self.symbol_table.lookup(id)
         if id_entry is not None:
             self.semantic_stack.push(id_entry.address)
+            if id_entry.role == 'func':
+                self.info.current_func = id_entry
 
     def pnum(self, token_string):
         self.semantic_stack.push(f'#{token_string}')
@@ -73,51 +76,90 @@ class CodeGen:
         arg_num = self.info.func_arg_num
         self.symbol_table.update_function_arg_num(arg_num)  #TODO doesnt work because we defined new ids
 
-    def func_return(self): ##
-        pass
+    def func_return(self): ## return to after function call stored in return_address
+        self.info.program_block.append(f"(JP, @{self.info.return_address}, , )")
+        self.info.pb_i += 1
 
     def func_save_resolve(self):
         pb_i = self.semantic_stack.pop()
         self.info.program_block[pb_i] = f"(JP, {self.info.pb_i}, , )"
 
-    def jpf_save(self): ##
-        pass
+    def jpf_save(self): ## jump address and expression value should be at ss(top) and ss(top-1)
+        pb_i = self.semantic_stack.pop()
+        self.info.program_block[pb_i] = f"(JPF, {self.semantic_stack.pop()}, {self.info.pb_i + 1}, )"
+        self.semantic_stack.push(self.info.pb_i)
+        self.info.pb_i += 1
 
-    def jp(self): ##
-        pass
+    def jp(self): ## fill saved jump to out of if statement
+        pb_i = self.semantic_stack.pop()
+        self.info.program_block[pb_i] = f"(JP, {self.info.pb_i}, )"
 
-    def label(self): ##
-        pass
+    def label(self): ## save address of before while condition
+        self.semantic_stack.push(self.info.pb_i)
 
-    def while_end(self): ##
-        pass
+    def while_end(self): ## fill jumps for false and correct conditions based on 3 values in ss
+        a_while_add = self.semantic_stack.pop()
+        expression_val = self.semantic_stack.pop()
+        b_while_add = self.semantic_stack.pop()
+        self.info.program_block[a_while_add] = f"(JPF, {expression_val}, {self.info.pb_i + 1}, )"
+        self.info.program_block.append(f"(JP, {b_while_add}, , )")
+        self.info.pb_i += 1
 
-    def pvalue(self): ##
-        pass
+    def pret_value(self): ## push address of return value for assignment
+        self.semantic_stack.push(self.info.return_value)
 
     def assign(self): ##
-        pass
+        value_add = self.semantic_stack.pop()
+        rv_add = self.semantic_stack.pop()
+        self.info.program_block.append(f"(ASSIGN, {value_add}, {rv_add}, )")
+        self.info.pb_i += 1
 
-    def parr(self): ##
-        pass
+    def parr(self): ## id of arr and expression value are in stack
+        offset = self.semantic_stack.pop()
+        id_add = self.semantic_stack.pop()
+        temp = self.get_temp_address()
+        self.info.program_block.append(f"(MULT, #{self.info.word_size}, {offset}, {temp})")
+        self.info.program_block.append(f"(ADD, {id_add}, {temp}, {temp})")
+        self.semantic_stack.push(f"@{temp}")    #TODO check later
+        self.info.pb_i += 2
 
-    def math_exec(self): ##
-        pass
+    def math_exec(self): ## based on op do one math expression and store in temp
+        second = self.semantic_stack.pop()
+        op = self.semantic_stack.pop()
+        first = self.semantic_stack.pop()
+        temp = self.get_temp_address()
+        self.info.program_block.append(f"({op}, {first}, {second}, {temp})")
+        self.info.pb_i += 1
+        self.semantic_stack.push(temp)
 
-    def push_op(self): ##
-        pass
+    def push_op(self, op): ## store op for math
+        self.semantic_stack.push(self.ops[op])
 
-    def p0(self): ##
-        pass
+    def p0(self): ## store 0 for minus ops
+        self.semantic_stack.push(f"#0")
 
     def args_start(self): ##
-        pass
+        self.info.arg_start_pointer = len(self.semantic_stack)
 
     def args_end(self): ##
-        pass
+        func_add = self.info.return_address
+        func_arg_num = len(self.semantic_stack) - self.info.arg_start_pointer
+        for arg in range(len(self.semantic_stack), self.info.arg_start_pointer, -1):
+            arg_add = self.semantic_stack.pop()
+            self.info.program_block(f"(ASSIGN, {arg_add}, {func_add + (func_arg_num * self.info.word_size)}, )")
+            func_arg_num -= 1
+            self.info.pb_i += 1
 
     def func_call(self): ##
-        pass
+        #TODO need to save state before function call
+        self.info.return_address = self.info.current_func.jmp_add
+        self.args_end()
+        self.info.program_block.append(f"(ASSIGN, #{self.info.pb_i + 2}, {self.info.return_address}, )")
+        pb_func_add = self.semantic_stack.pop()
+        self.info.program_block.append(f"(JP, {pb_func_add}, , )")
+        self.info.pb_i += 2
+        #TODO get return value
+        #TODO restore state
 
     #code genrator functions
     def get_data_address(self):
