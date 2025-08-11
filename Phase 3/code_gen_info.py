@@ -12,6 +12,7 @@ class CodeGenInfo:
         self.current_func = None
         self.return_address = 0
         self.return_value = 0
+        self.first_symbol_flag = True
 
     def increase_data_address(self, size):
         self.data_address += size
@@ -20,7 +21,7 @@ class CodeGenInfo:
         return self.data_address
         
     def increase_temp_address(self, size):
-        self.temp += size
+        self.temp_address += size
 
     def get_temp_address(self):
         return self.temp_address

@@ -127,6 +127,7 @@ class Parser:
             self.DeclarationList()
         elif self.token_string == {"$"}:            # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing Program")
+        self.code_gen.save_program_block()
         self.stack.pop()
         
     def DeclarationList(self):
@@ -562,7 +563,7 @@ class Parser:
             self.exit_node()
         elif self.token_type == "ID":
             self.enter_node("Expression")
-            self.code_gen.pid()
+            self.code_gen.pid(self.token_string)
             self.match_id()
             self.B()
             self.exit_node()
@@ -689,12 +690,12 @@ class Parser:
             self.update_token()
         if self.token_string == "<":    #first
             self.enter_node("Relop")
-            self.code_gen.push_op()
+            self.code_gen.push_op("<")
             self.match("<")
             self.exit_node()
         elif self.token_string == "==":
             self.enter_node("Relop")
-            self.code_gen.push_op()
+            self.code_gen.push_op("==")
             self.match("==")
             self.exit_node()
         elif self.token_string in {"+", "-", "("} or self.token_type in {"ID", "NUM"}:     # synch
@@ -787,12 +788,12 @@ class Parser:
             self.update_token()
         if self.token_string == "+":    #first
             self.enter_node("Addop")
-            self.code_gen.push_op()
+            self.code_gen.push_op("+")
             self.match("+")
             self.exit_node()
         elif self.token_string == "-":
             self.enter_node("Addop")
-            self.code_gen.push_op()
+            self.code_gen.push_op("-")
             self.match("-")
             self.exit_node()
         elif self.token_string in {"("} or self.token_type in {"ID", "NUM"}:     # synch
@@ -865,7 +866,7 @@ class Parser:
             self.update_token()
         self.enter_node("G")
         if self.token_string == "*":    #first
-            self.code_gen.push_op()
+            self.code_gen.push_op("*")
             self.match("*")
             self.SignedFactor()
             self.code_gen.math_exec()
@@ -892,7 +893,7 @@ class Parser:
         elif self.token_string == "-":
             self.enter_node("SignedFactor")
             self.code_gen.p0()
-            self.code_gen.push_op()
+            self.code_gen.push_op("-")
             self.match("-")
             self.Factor()
             self.code_gen.math_exec()
@@ -939,7 +940,7 @@ class Parser:
         elif self.token_string == "-":
             self.enter_node("SignedFactorZegond")
             self.code_gen.p0()
-            self.code_gen.push_op()
+            self.code_gen.push_op("-")
             self.match("-")
             self.Factor()
             self.code_gen.math_exec()
@@ -969,13 +970,13 @@ class Parser:
             self.exit_node()
         elif self.token_type == "ID":
             self.enter_node("Factor")
-            self.code_gen.pid()
+            self.code_gen.pid(self.token_string)
             self.match_id()
             self.VarCallPrime()
             self.exit_node()
         elif self.token_type == "NUM":
             self.enter_node("Factor")
-            self.code_gen.pnum()
+            self.code_gen.pnum(self.token_string)
             self.match_num()
             self.exit_node()
         elif self.token_string in {";", ",", "]", ")", "<", "==", "*", "+", "-"}:     # synch
@@ -1065,7 +1066,7 @@ class Parser:
             self.exit_node()
         elif self.token_type == "NUM":
             self.enter_node("FactorZegond")
-            self.code_gen.pnum()
+            self.code_gen.pnum(self.token_string)
             self.match_num()
             self.exit_node()
         elif self.token_string in {";", ",", "]", ")", "<", "==", "*", "+", "-"}:     # synch

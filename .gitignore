@@ -8,5 +8,4 @@ tokens.txt
 testcase/
 test.py
 __pycache__/
-grammar
-grammar2.py
+intermediate_code.txt

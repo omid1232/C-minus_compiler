@@ -16,7 +16,7 @@ class ID_entry:
 
 class ScopeStack:
     def __init__(self):
-        self.scopeStack = []
+        self.scopeStack = [0]
 
     def push(self, scope):
         self.scopeStack.append(scope)
@@ -90,3 +90,9 @@ class SymbolTable:
 
     def set_declaration(self, is_declaration):
         self.is_declaration = is_declaration
+
+    def print_symbols(self): # to debug
+        print("Symbol Table:")
+        for symbol in self.symbols:
+            print(symbol.lexeme, symbol.scope)
+        print()

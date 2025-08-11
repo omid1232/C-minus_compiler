@@ -65,7 +65,10 @@ class CodeGen:
     
     def declare_func(self): ##change type of id to func and set the address of program block cell for function call
         self.symbol_table.change_to_func(self.info.pb_i)
-        #TODO enter new scorp       
+        # if self.info.first_symbol_flag:
+            # self.info.first_symbol_flag = False
+            # return
+        self.symbol_table.enter_scope()
 
     def params_start(self):
         self.info.reset_func_arg_num()
@@ -77,6 +80,7 @@ class CodeGen:
         self.symbol_table.update_function_arg_num(arg_num)  #TODO doesnt work because we defined new ids
 
     def func_return(self): ## return to after function call stored in return_address
+        self.symbol_table.exit_scope() #TODO check if this is placed correctly
         self.info.program_block.append(f"(JP, @{self.info.return_address}, , )")
         self.info.pb_i += 1
 
@@ -171,3 +175,7 @@ class CodeGen:
         temp = self.info.get_temp_address()
         self.info.increase_temp_address(self.info.word_size)
         return temp
+
+    def save_program_block(self):
+        with open("intermediate_code.txt", "w", encoding="utf-8") as f:
+            f.write("\n".join(self.info.program_block))
