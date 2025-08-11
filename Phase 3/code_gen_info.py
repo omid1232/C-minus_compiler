@@ -12,6 +12,7 @@ class CodeGenInfo:
         self.current_func = None
         self.return_address = 0
         self.return_value = 0
+        self.declaring_main = False
 
     def increase_data_address(self, size):
         self.data_address += size

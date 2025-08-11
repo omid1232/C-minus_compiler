@@ -47,6 +47,7 @@ class ScopeStack:
             symbol.address = jmp_add
             symbol.role = 'func'
             symbol.arg_num = 0
+        return symbol.lexeme #return lexeme to check if it is main
 
     def change_to_array(self, arg_num):
         symbol = self.scopeStack[-1] if self.scopeStack else None
@@ -76,7 +77,7 @@ class SymbolTable:
 
     def change_to_func(self, jmp_add):
         #change last symbol to function
-        self.get_current_scope().change_to_func(jmp_add)
+        return self.get_current_scope().change_to_func(jmp_add)
 
     def update_function_arg_num(self, arg_num):
         self.get_current_scope().update_func_arg_num(arg_num)

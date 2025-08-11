@@ -77,7 +77,10 @@ class CodeGen:
     
     def declare_func(self): ##change type of id to func and set the address of program block cell for function call
         self.debug("declare_func")
-        self.symbol_table.change_to_func(self.info.pb_i)    
+        lexeme = self.symbol_table.change_to_func(self.info.pb_i)
+        print("Function declared:", lexeme)
+        if lexeme == "main":
+            self.info.declaring_main = True
 
     def params_start(self):
         self.debug("params_start")
@@ -92,13 +95,22 @@ class CodeGen:
 
     def func_return(self): ## return to after function call stored in return_address
         self.debug("func_return")
-        self.info.program_block.append(f"(JP, @{self.info.return_address}, , )")
+        if self.info.declaring_main:
+            self.info.program_block.append(f"(JP, {self.info.pb_i + 2}, , )")
+        else:
+            self.info.program_block.append(f"(JP, @{self.info.return_address}, , )")
         self.info.pb_i += 1
 
     def func_save_resolve(self):
         self.debug("func_save_resolve")
         pb_i = self.semantic_stack.pop()
         self.info.program_block[pb_i] = f"(JP, {self.info.pb_i}, , )"
+        # print("-" * 200)
+        # print(type(self.info.current_func))
+        if self.info.declaring_main:
+            self.info.program_block.append(f"(JP, {pb_i + 1}, , )")
+            self.info.program_block.append(f"(ASSIGN, 500, 500, )") #maybe jump to nowhere is error? extra code for that reason
+            self.info.pb_i += 2
 
     def new_scope(self):
         self.debug("new_scope")

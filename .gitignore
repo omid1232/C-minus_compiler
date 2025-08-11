@@ -8,4 +8,4 @@ tokens.txt
 testcase/
 test.py
 __pycache__/
-intermediate_code.txt
+output.txt
