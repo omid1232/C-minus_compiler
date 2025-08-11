@@ -1,8 +1,8 @@
 class CodeGenInfo:
     def __init__(self):
         self.word_size = 4
-        self.data_address = 100  # Starting address for variables
-        self.temp_address = 500  # Starting address for temporary variables
+        self.data_address = 500  # Starting address for variables
+        self.temp_address = 900  # Starting address for temporary variables
         self.last_used_id = None
         self.func_arg_num = 0    # how many parameters a function has
         self.arg_declaration = False    # wether we are declaring function parameters
@@ -12,7 +12,6 @@ class CodeGenInfo:
         self.current_func = None
         self.return_address = 0
         self.return_value = 0
-        self.first_symbol_flag = True
 
     def increase_data_address(self, size):
         self.data_address += size
