@@ -4,7 +4,7 @@
 4. DeclarationInitial -> #push_type TypeSpecifier #declare_id ID  
 5. DeclarationPrime -> FunDeclarationPrime | VarDeclarationPrime  
 6. VarDeclarationPrime -> ; | [ #pnum NUM ] #declare_arr ;  
-7. FunDeclarationPrime -> #save #declare_func ( #params_start Params #params_end ) CompoundStmt #func_return #func_save_resolve
+7. FunDeclarationPrime -> #save #declare_func #new_scope ( #params_start Params #params_end ) CompoundStmt #end_scope #func_return #func_save_resolve
 8. TypeSpecifier -> int | void  
 9. Params -> #push_type int #declare_id ID ParamPrime ParamList | void  
 10. ParamList -> , Param ParamList | EPSILON  
@@ -14,8 +14,8 @@
 14. StatementList -> Statement StatementList | EPSILON  
 15. Statement -> ExpressionStmt | CompoundStmt | SelectionStmt | IterationStmt | ReturnStmt  
 16. ExpressionStmt -> Expression ; | break ; | ;  
-17. SelectionStmt -> if ( Expression ) #save Statement else #jpf_save Statement #jp
-18. IterationStmt -> while #label ( Expression ) #save Statement #while_end
+17. SelectionStmt -> if ( Expression ) #save #new_scope Statement #end_scope else #jpf_save #new_scope Statement #end_scope #jp
+18. IterationStmt -> while #label ( Expression ) #save #new_scope Statement #end_scope #while_end
 19. ReturnStmt -> return ReturnStmtPrime  
 20. ReturnStmtPrime -> ; | #pret_value Expression #assign ;
 21. Expression -> SimpleExpressionZegond | #pid ID B 
