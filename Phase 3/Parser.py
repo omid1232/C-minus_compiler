@@ -127,7 +127,6 @@ class Parser:
             self.DeclarationList()
         elif self.token_string == {"$"}:            # synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing Program")
-        self.code_gen.save_program_block()
         self.stack.pop()
         
     def DeclarationList(self):
@@ -241,14 +240,18 @@ class Parser:
             self.update_token()
         if self.token_string == "(":    #first
             self.enter_node("FunDeclarationPrime")
+            self.code_gen.save()
             self.code_gen.declare_func()
+            self.code_gen.new_scope()
             self.match("(")
             self.code_gen.params_start()
             self.Params()
             self.code_gen.params_end()
             self.match(")")
             self.CompoundStmt()
+            self.code_gen.end_scope()
             self.code_gen.func_return()
+            self.code_gen.func_save_resolve()
             self.exit_node()
         elif self.token_string in {";", "{", "}", "break", "if", "while", "return", "int", "void", "+", "-", "$"} or self.token_type in {"ID", "NUM"}:  #synch
             self.parser_errors.append(f"#{self.line_number} : syntax error, missing FunDeclarationPrime")
@@ -288,7 +291,7 @@ class Parser:
             self.enter_node("Params")
             self.code_gen.push_type(type= self.token_string)
             self.match("int")
-            self.code_gen.declare_id()
+            self.code_gen.declare_id(lexeme= self.token_string)
             self.match_id()
             self.ParamPrime()
             self.ParamList()
@@ -467,14 +470,18 @@ class Parser:
         if self.token_string == "if":
             self.enter_node("SelectionStmt")
             self.match("if")
-            self.code_gen.save()
             self.match("(")
             self.Expression()
             self.match(")")
+            self.code_gen.save()
+            self.code_gen.new_scope()
             self.Statement()
+            self.code_gen.end_scope()
             self.match("else")
             self.code_gen.jpf_save()
+            self.code_gen.new_scope()
             self.Statement()
+            self.code_gen.end_scope()
             self.code_gen.jp()
             self.exit_node()
         elif self.token_string in {";", "(", "{", "}", "break", "while", "return", "else", "+", "-"} or self.token_type in {"ID", "NUM"}:  #synch
@@ -498,7 +505,9 @@ class Parser:
             self.Expression()
             self.match(")")
             self.code_gen.save()
+            self.code_gen.new_scope()
             self.Statement()
+            self.code_gen.end_scope()
             self.code_gen.while_end()
             self.exit_node()
         elif self.token_string in {";", "(", "{", "}", "break", "if", "return", "else", "+", "-"} or self.token_type in {"ID", "NUM"}:  #synch
@@ -535,7 +544,7 @@ class Parser:
             self.update_token()
         if self.token_string in {"(", "+", "-"} or self.token_type in {"ID", "NUM"}:    #first
             self.enter_node("ReturnStmtPrime")
-            self.code_gen.pvalue()
+            self.code_gen.pret_value()
             self.Expression()
             self.code_gen.assign()
             self.match(";")
@@ -563,7 +572,7 @@ class Parser:
             self.exit_node()
         elif self.token_type == "ID":
             self.enter_node("Expression")
-            self.code_gen.pid(self.token_string)
+            self.code_gen.pid(id= self.token_string)
             self.match_id()
             self.B()
             self.exit_node()
@@ -690,12 +699,12 @@ class Parser:
             self.update_token()
         if self.token_string == "<":    #first
             self.enter_node("Relop")
-            self.code_gen.push_op("<")
+            self.code_gen.push_op(op= self.token_string)
             self.match("<")
             self.exit_node()
         elif self.token_string == "==":
             self.enter_node("Relop")
-            self.code_gen.push_op("==")
+            self.code_gen.push_op(op= self.token_string)
             self.match("==")
             self.exit_node()
         elif self.token_string in {"+", "-", "("} or self.token_type in {"ID", "NUM"}:     # synch
@@ -788,12 +797,12 @@ class Parser:
             self.update_token()
         if self.token_string == "+":    #first
             self.enter_node("Addop")
-            self.code_gen.push_op("+")
+            self.code_gen.push_op(op= self.token_string)
             self.match("+")
             self.exit_node()
         elif self.token_string == "-":
             self.enter_node("Addop")
-            self.code_gen.push_op("-")
+            self.code_gen.push_op(op= self.token_string)
             self.match("-")
             self.exit_node()
         elif self.token_string in {"("} or self.token_type in {"ID", "NUM"}:     # synch
@@ -866,7 +875,7 @@ class Parser:
             self.update_token()
         self.enter_node("G")
         if self.token_string == "*":    #first
-            self.code_gen.push_op("*")
+            self.code_gen.push_op(op= self.token_string)
             self.match("*")
             self.SignedFactor()
             self.code_gen.math_exec()
@@ -893,7 +902,7 @@ class Parser:
         elif self.token_string == "-":
             self.enter_node("SignedFactor")
             self.code_gen.p0()
-            self.code_gen.push_op("-")
+            self.code_gen.push_op(op= self.token_string)
             self.match("-")
             self.Factor()
             self.code_gen.math_exec()
@@ -940,7 +949,7 @@ class Parser:
         elif self.token_string == "-":
             self.enter_node("SignedFactorZegond")
             self.code_gen.p0()
-            self.code_gen.push_op("-")
+            self.code_gen.push_op(op= self.token_string)
             self.match("-")
             self.Factor()
             self.code_gen.math_exec()
@@ -970,13 +979,13 @@ class Parser:
             self.exit_node()
         elif self.token_type == "ID":
             self.enter_node("Factor")
-            self.code_gen.pid(self.token_string)
+            self.code_gen.pid(id= self.token_string)
             self.match_id()
             self.VarCallPrime()
             self.exit_node()
         elif self.token_type == "NUM":
             self.enter_node("Factor")
-            self.code_gen.pnum(self.token_string)
+            self.code_gen.pnum(token_string= self.token_string)
             self.match_num()
             self.exit_node()
         elif self.token_string in {";", ",", "]", ")", "<", "==", "*", "+", "-"}:     # synch
@@ -997,7 +1006,6 @@ class Parser:
             self.match("(")
             self.code_gen.args_start()
             self.Args()
-            self.code_gen.args_end()
             self.match(")")
             self.code_gen.func_call()
         elif self.token_string == "[":
@@ -1041,7 +1049,6 @@ class Parser:
             self.match("(")
             self.code_gen.args_start()
             self.Args()
-            self.code_gen.args_end()
             self.match(")")
             self.code_gen.func_call()
         elif self.token_string in {";", ",", "]", ")", "<", "==", "*", "+", "-"}:     # follow
@@ -1135,8 +1142,8 @@ class Parser:
                 f.write("\n".join(self.parser_errors))
             else:
                 f.write("There is no syntax error.")
-
-
+        self.code_gen.output("output.txt")
+    
 if __name__ == '__main__':
     with open("input.txt", "r", encoding="utf-8") as file:
         text = file.read()
