@@ -165,6 +165,8 @@ class CodeGen:
         self.info.program_block.append(f"(ASSIGN, {value_add}, {rv_add}, )")
         if self.info.eq_count > 0:
             self.semantic_stack.push(rv_add)
+        elif self.info.arr_ass:
+            self.semantic_stack.push(rv_add)
         self.info.pb_i += 1
 
     def parr(self): ## id of arr and expression value are in stack
@@ -176,6 +178,12 @@ class CodeGen:
         self.info.program_block.append(f"(ADD, {id_add}, {temp}, {temp})")
         self.semantic_stack.push(f"@{temp}")    #TODO check later
         self.info.pb_i += 2
+
+    def arr_ass_flag(self):
+        self.info.arr_ass = True
+
+    def arr_ass_reset(self):
+        self.info.arr_ass = False
 
     def math_exec(self): ## based on op do one math expression and store in temp
         self.debug("math_exec")
