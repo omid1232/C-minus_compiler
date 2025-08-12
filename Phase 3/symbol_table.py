@@ -17,6 +17,8 @@ class ID_entry:
 class ScopeStack:
     def __init__(self, upperStack=None):
         self.scopeStack = []
+        if upperStack is None:
+            self.scopeStack.append(ID_entry("output", "void", "func", 1, self, 0, None))  # default output function
         self.upperStack = upperStack
     
     def add(self, lexeme, type, address, is_declaration=False):

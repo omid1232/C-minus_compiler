@@ -9,3 +9,4 @@ testcase/
 test.py
 __pycache__/
 output.txt
+test_output.txt

@@ -53,9 +53,10 @@ class CodeGen:
         self.debug("pid")
         id_entry = self.symbol_table.lookup(id)
         if id_entry is not None:
-            self.semantic_stack.push(id_entry.address)
             if id_entry.role == 'func':
                 self.info.current_func = id_entry
+            if id_entry.lexeme != "output":
+                self.semantic_stack.push(id_entry.address)
 
     def pnum(self, token_string):
         self.debug("pnum")
@@ -71,6 +72,8 @@ class CodeGen:
 
     def save(self): ## save address of program block for later jump
         self.debug("save")
+        if self.info.current_func is not None and self.info.current_func.lexeme == "output":
+            return
         self.semantic_stack.push(self.info.pb_i)
         self.info.program_block.append("")
         self.info.pb_i += 1
@@ -78,7 +81,6 @@ class CodeGen:
     def declare_func(self): ##change type of id to func and set the address of program block cell for function call
         self.debug("declare_func")
         lexeme = self.symbol_table.change_to_func(self.info.pb_i)
-        print("Function declared:", lexeme)
         if lexeme == "main":
             self.info.declaring_main = True
 
@@ -105,8 +107,6 @@ class CodeGen:
         self.debug("func_save_resolve")
         pb_i = self.semantic_stack.pop()
         self.info.program_block[pb_i] = f"(JP, {self.info.pb_i}, , )"
-        # print("-" * 200)
-        # print(type(self.info.current_func))
         if self.info.declaring_main:
             self.info.program_block.append(f"(JP, {pb_i + 1}, , )")
             self.info.program_block.append(f"(ASSIGN, 500, 500, )") #maybe jump to nowhere is error? extra code for that reason
@@ -201,8 +201,16 @@ class CodeGen:
 
     def func_call(self): ##
         #TODO need to save state before function call
+        if self.info.current_func.lexeme == "output":
+            self.debug("func_call")
+            # print("why" * 200)
+            self.info.program_block.append(f"(PRINT, {self.semantic_stack.pop()}, , )")
+            self.info.pb_i += 1
+            self.info.current_func = None
+            return
         self.args_set()
         self.debug("func_call")
+        print("Function call:", self.info.current_func.lexeme)
         self.info.program_block.append(f"(ASSIGN, #{self.info.pb_i + 2}, {self.info.return_address}, )")
         pb_func_add = self.semantic_stack.pop()
         self.info.program_block.append(f"(JP, {pb_func_add}, , )")
