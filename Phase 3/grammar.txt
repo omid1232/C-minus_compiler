@@ -43,5 +43,5 @@
 43. FactorPrime -> ( #args_start Args ) #func_call | EPSILON  
 44. FactorZegond -> ( Expression ) | #pnum NUM  
 45. Args -> ArgList | EPSILON  
-46. ArgList -> Expression ArgListPrime  
-47. ArgListPrime -> , Expression ArgListPrime | EPSILON 
+46. ArgList -> #func_ass_flag Expression #func_ass_reset ArgListPrime  
+47. ArgListPrime -> , #func_ass_flag Expression #func_ass_reset ArgListPrime | EPSILON 
