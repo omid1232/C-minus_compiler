@@ -594,7 +594,9 @@ class Parser:
             self.SimpleExpressionPrime()
         elif self.token_string == "[":
             self.match("[")
+            self.code_gen.arr_ass_flag()
             self.Expression()
+            self.code_gen.arr_ass_reset()
             self.match("]")
             self.code_gen.parr()
             self.H()
@@ -1031,7 +1033,9 @@ class Parser:
         self.enter_node("VarPrime")
         if self.token_string == "[":    # first
             self.match("[")
+            self.code_gen.arr_ass_flag()
             self.Expression()
+            self.code_gen.arr_ass_reset()
             self.match("]")
             self.code_gen.parr()
         elif self.token_string in {";", ",", "]", ")", "<", "==", "*", "+", "-"}:     # follow
