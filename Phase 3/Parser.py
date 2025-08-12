@@ -600,7 +600,9 @@ class Parser:
             self.H()
         elif self.token_string == "=":
             self.match("=")
+            self.code_gen.inc_eq()
             self.Expression()
+            self.code_gen.dec_eq()
             self.code_gen.assign()
         elif self.token_string in {";", ",", "]", ")"}:     # follow
             self.SimpleExpressionPrime()
@@ -623,7 +625,9 @@ class Parser:
             self.C()
         elif self.token_string == "=":
             self.match("=")
+            self.code_gen.inc_eq()
             self.Expression()
+            self.code_gen.dec_eq()
             self.code_gen.assign()
         elif self.token_string in {";", ",", "]", ")"}:     # follow
             self.G()

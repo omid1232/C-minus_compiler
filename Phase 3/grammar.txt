@@ -19,8 +19,8 @@
 19. ReturnStmt -> return ReturnStmtPrime  
 20. ReturnStmtPrime -> ; | #pret_value Expression #assign ;
 21. Expression -> SimpleExpressionZegond | #pid ID B 
-22. B -> = Expression #assign | [ Expression ] #parr H | SimpleExpressionPrime  
-23. H -> = Expression #assign | G D C  
+22. B -> = #inc_eq Expression #dec_eq #assign | [ Expression ] #parr H | SimpleExpressionPrime  
+23. H -> = #inc_eq Expression #dec_eq #assign | G D C  
 24. SimpleExpressionZegond -> AdditiveExpressionZegond C 
 25. SimpleExpressionPrime -> AdditiveExpressionPrime C  
 26. C -> Relop AdditiveExpression #math_exec | EPSILON  

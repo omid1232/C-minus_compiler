@@ -150,11 +150,21 @@ class CodeGen:
         self.debug("pret_value")
         self.semantic_stack.push(self.info.return_value)
 
+    def inc_eq(self):
+        self.debug("inc_eq")
+        self.info.eq_count += 1
+
+    def dec_eq(self):
+        self.debug("dec_eq")
+        self.info.eq_count -= 1
+
     def assign(self): ##
         self.debug("assign")
         value_add = self.semantic_stack.pop()
         rv_add = self.semantic_stack.pop()
         self.info.program_block.append(f"(ASSIGN, {value_add}, {rv_add}, )")
+        if self.info.eq_count > 0:
+            self.semantic_stack.push(rv_add)
         self.info.pb_i += 1
 
     def parr(self): ## id of arr and expression value are in stack
@@ -224,6 +234,8 @@ class CodeGen:
         self.info.program_block.append(f"(ASSIGN, {self.info.return_value}, {result}, )")
         self.info.pb_i += 1
         self.semantic_stack.push(result)
+        if self.info.current_func.type == "void":
+            self.semantic_stack.pop()
 
     #code genrator functions
     def get_data_address(self):
