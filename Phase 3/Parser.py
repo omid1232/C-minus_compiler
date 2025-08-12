@@ -1116,7 +1116,9 @@ class Parser:
             self.update_token()
         if self.token_string in {"+", "-", "("} or self.token_type in {"ID", "NUM"}:    # first
             self.enter_node("ArgList")
+            self.code_gen.func_ass_flag()
             self.Expression()
+            self.code_gen.func_ass_reset()
             self.ArgListPrime()
             self.exit_node()
         elif self.token_string in {")"}:     # synch
@@ -1135,7 +1137,9 @@ class Parser:
         self.enter_node("ArgListPrime")
         if self.token_string in {","}:    # first
             self.match(",")
+            self.code_gen.func_ass_flag()
             self.Expression()
+            self.code_gen.func_ass_reset()
             self.ArgListPrime()
         elif self.token_string in {")"}:     # follow
             self.make_node("epsilon")
