@@ -167,6 +167,8 @@ class CodeGen:
             self.semantic_stack.push(rv_add)
         elif self.info.arr_ass:
             self.semantic_stack.push(rv_add)
+        elif self.info.func_ass:
+            self.semantic_stack.push(rv_add)
         self.info.pb_i += 1
 
     def parr(self): ## id of arr and expression value are in stack
@@ -255,6 +257,12 @@ class CodeGen:
         temp = self.info.get_temp_address()
         self.info.increase_temp_address(self.info.word_size)
         return temp
+    
+    def func_ass_flag(self):
+        self.info.func_ass = True
+
+    def func_ass_reset(self):
+        self.info.func_ass = False
     
     def debug(self, step):
         print(step)
