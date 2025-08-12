@@ -14,6 +14,7 @@ class CodeGenInfo:
         self.return_value = 0
         self.declaring_main = False
         self.eq_count = 0
+        self.arr_ass = False
 
     def increase_data_address(self, size):
         self.data_address += size
