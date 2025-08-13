@@ -13,7 +13,7 @@
 13. CompoundStmt -> { DeclarationList StatementList }  
 14. StatementList -> Statement StatementList | EPSILON  
 15. Statement -> ExpressionStmt | CompoundStmt | SelectionStmt | IterationStmt | ReturnStmt  
-16. ExpressionStmt -> Expression ; | break ; | ;  
+16. ExpressionStmt -> Expression ; | break #add_break ; | ;  
 17. SelectionStmt -> if ( Expression ) #save #new_scope Statement #end_scope else #jpf_save #new_scope Statement #end_scope #jp
 18. IterationStmt -> while #label ( Expression ) #save #new_scope Statement #end_scope #while_end
 19. ReturnStmt -> return ReturnStmtPrime  

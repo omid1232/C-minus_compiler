@@ -448,6 +448,7 @@ class Parser:
         elif self.token_string == "break":
             self.enter_node("ExpressionStmt")
             self.match("break")
+            self.code_gen.add_break()
             self.match(";")
             self.exit_node()
         elif self.token_string == ";":

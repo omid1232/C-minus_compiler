@@ -131,20 +131,26 @@ class CodeGen:
     def jp(self): ## fill saved jump to out of if statement
         self.debug("jp")
         pb_i = self.semantic_stack.pop()
-        self.info.program_block[pb_i] = f"(JP, {self.info.pb_i}, )"
+        self.info.program_block[pb_i] = f"(JP, {self.info.pb_i}, , )"
 
     def label(self): ## save address of before while condition
         self.debug("label")
+        self.info.enter_loop()
         self.semantic_stack.push(self.info.pb_i)
 
     def while_end(self): ## fill jumps for false and correct conditions based on 3 values in ss
         self.debug("while_end")
+        breaks = self.info.loop_stack[-1] if self.info.loop_stack else []
+        print("breaks", breaks)
         a_while_add = self.semantic_stack.pop()
         expression_val = self.semantic_stack.pop()
         b_while_add = self.semantic_stack.pop()
+        for i in range(len(breaks)):
+            self.info.program_block[breaks[i]] = f"(JP, {self.info.pb_i + 1}, , )"
         self.info.program_block[a_while_add] = f"(JPF, {expression_val}, {self.info.pb_i + 1}, )"
         self.info.program_block.append(f"(JP, {b_while_add}, , )")
         self.info.pb_i += 1
+        self.info.exit_loop()
 
     def pret_value(self): ## push address of return value for assignment
         self.debug("pret_value")
@@ -245,6 +251,12 @@ class CodeGen:
         if self.info.current_func.type == "void":
             self.semantic_stack.pop()
 
+    def add_break(self):
+        self.debug("add_break")
+        self.info.program_block.append("")
+        self.info.add_break(self.info.pb_i)
+        self.info.pb_i += 1
+
     #code genrator functions
     def get_data_address(self):
         addr = self.info.get_data_address()
@@ -263,11 +275,11 @@ class CodeGen:
         self.info.func_ass = False
     
     def debug(self, step):
-        # print(step)
-        # print(self.semantic_stack.stack)
-        # print(self.info.program_block)
-        # print(self.info.pb_i)
-        # print("\n")
+        print(step)
+        print(self.semantic_stack.stack)
+        print(self.info.program_block)
+        print(self.info.pb_i)
+        print("\n")
         pass
     
     def output(self, path):

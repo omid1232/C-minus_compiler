@@ -16,6 +16,7 @@ class CodeGenInfo:
         self.eq_count = 0
         self.arr_ass = False
         self.func_ass = False
+        self.loop_stack = []
 
     def increase_data_address(self, size):
         self.data_address += size
@@ -40,3 +41,12 @@ class CodeGenInfo:
 
     def get_arg_declaration(self):
         return self.arg_declaration
+
+    def enter_loop(self):
+        self.loop_stack.append([])
+
+    def add_break(self, address):
+        self.loop_stack[-1].append(address)
+    
+    def exit_loop(self):
+        self.loop_stack.pop()
