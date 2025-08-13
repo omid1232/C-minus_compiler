@@ -1,6 +1,5 @@
 from symbol_table import SymbolTable
 from code_gen_info import CodeGenInfo
-import time
 
 class SemanticStack:
     def __init__(self):
