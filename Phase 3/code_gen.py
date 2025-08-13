@@ -223,14 +223,12 @@ class CodeGen:
         #TODO need to save state before function call
         if self.info.current_func.lexeme == "output":
             self.debug("func_call")
-            # print("why" * 200)
             self.info.program_block.append(f"(PRINT, {self.semantic_stack.pop()}, , )")
             self.info.pb_i += 1
             self.info.current_func = None
             return
         self.args_set()
         self.debug("func_call")
-        print("Function call:", self.info.current_func.lexeme)
         self.info.program_block.append(f"(ASSIGN, #{self.info.pb_i + 2}, {self.info.return_address}, )")
         pb_func_add = self.semantic_stack.pop()
         self.info.program_block.append(f"(JP, {pb_func_add}, , )")
@@ -265,11 +263,12 @@ class CodeGen:
         self.info.func_ass = False
     
     def debug(self, step):
-        print(step)
-        print(self.semantic_stack.stack)
-        print(self.info.program_block)
-        print(self.info.pb_i)
-        print("\n")
+        # print(step)
+        # print(self.semantic_stack.stack)
+        # print(self.info.program_block)
+        # print(self.info.pb_i)
+        # print("\n")
+        pass
     
     def output(self, path):
         with open(path, "w") as f:
