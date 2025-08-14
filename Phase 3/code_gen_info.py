@@ -17,6 +17,7 @@ class CodeGenInfo:
         self.arr_ass = False
         self.func_ass = False
         self.loop_stack = []
+        self.recursive_stack = []
 
     def increase_data_address(self, size):
         self.data_address += size

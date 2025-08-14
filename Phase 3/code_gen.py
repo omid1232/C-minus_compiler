@@ -53,9 +53,14 @@ class CodeGen:
         id_entry = self.symbol_table.lookup(id)
         if id_entry is not None:
             if id_entry.role == 'func':
+                self.info.recursive_stack.append(self.info.current_func)    #for function call within another
+                self.info.recursive_stack.append(self.info.arg_start_pointer)
                 self.info.current_func = id_entry
             if id_entry.lexeme != "output":
-                self.semantic_stack.push(id_entry.address)
+                if id_entry.role == 'arr':
+                    self.semantic_stack.push(f"#{id_entry.address}")
+                else:
+                    self.semantic_stack.push(id_entry.address)
 
     def pnum(self, token_string):
         self.debug("pnum")
@@ -64,10 +69,12 @@ class CodeGen:
     def declare_arr(self, has_arg_num):
         self.debug("declare_arr")
         arg_num = None
+        role = 'arr_param'
         if has_arg_num:
             arg_num = int(self.semantic_stack.pop()[1:])
             self.info.increase_data_address(self.info.word_size * (arg_num - 1))
-        self.symbol_table.change_to_array(arg_num)
+            role = 'arr'
+        self.symbol_table.change_to_array(arg_num, role)
 
     def save(self): ## save address of program block for later jump
         self.debug("save")
@@ -155,6 +162,11 @@ class CodeGen:
         self.debug("pret_value")
         self.semantic_stack.push(self.info.return_value)
 
+    def return_jmp(self):
+        # could also save every return pb[i] and jump to jmp @500 at the end of function
+        self.info.program_block.append(f"(JP, @{self.info.return_address}, , )")
+        self.info.pb_i += 1 
+
     def inc_eq(self):
         self.debug("inc_eq")
         self.info.eq_count += 1
@@ -214,6 +226,12 @@ class CodeGen:
         self.debug("args_start")
         self.info.arg_start_pointer = len(self.semantic_stack.stack)
 
+    def func_ass_flag(self):
+        self.info.func_ass = True
+
+    def func_ass_reset(self):
+        self.info.func_ass = False
+
     def args_set(self): ##
         self.debug("args_set")
         func_add = self.info.current_func.jmp_add
@@ -239,6 +257,8 @@ class CodeGen:
         self.info.program_block.append(f"(JP, {pb_func_add}, , )")
         self.info.pb_i += 2
         self.set_ret_Val()
+        self.info.arg_start_pointer = self.info.recursive_stack.pop()
+        self.info.current_func = self.info.recursive_stack.pop()
         #TODO restore state
 
     def set_ret_Val(self):
@@ -266,12 +286,6 @@ class CodeGen:
         temp = self.info.get_temp_address()
         self.info.increase_temp_address(self.info.word_size)
         return temp
-    
-    def func_ass_flag(self):
-        self.info.func_ass = True
-
-    def func_ass_reset(self):
-        self.info.func_ass = False
     
     def debug(self, step):
         print(step)

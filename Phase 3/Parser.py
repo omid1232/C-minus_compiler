@@ -548,6 +548,7 @@ class Parser:
             self.code_gen.pret_value()
             self.Expression()
             self.code_gen.assign()
+            self.code_gen.return_jmp()
             self.match(";")
             self.exit_node()
         elif self.token_string == ";":

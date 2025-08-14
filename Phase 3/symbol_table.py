@@ -2,7 +2,7 @@ class ID_entry:
     def __init__(self, lexeme, type, role, arg_num, scope, address, jmp_add):
         """
         type: [int, void]
-        role: [var, arr, func]
+        role: [var, arr, func, arr_param]
         arg_num for function param count, for array element count
         """
         self.lexeme = lexeme
@@ -51,10 +51,10 @@ class ScopeStack:
             symbol.arg_num = 0
         return symbol.lexeme #return lexeme to check if it is main
 
-    def change_to_array(self, arg_num):
+    def change_to_array(self, arg_num, role):
         symbol = self.scopeStack[-1] if self.scopeStack else None
         if symbol is not None:
-            symbol.role = 'arr'
+            symbol.role = role
             symbol.arg_num = arg_num
 
     def update_func_arg_num(self, arg_num):
@@ -73,9 +73,9 @@ class SymbolTable:
         self.get_current_scope().add(lexeme, type, address, self.is_declaration)
         self.set_declaration(False)
 
-    def change_to_array(self, arg_num):
+    def change_to_array(self, arg_num, role):
         #change last symbol to array
-        self.get_current_scope().change_to_array(arg_num)
+        self.get_current_scope().change_to_array(arg_num, role)
 
     def change_to_func(self, jmp_add):
         #change last symbol to function
