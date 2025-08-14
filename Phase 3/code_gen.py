@@ -147,7 +147,6 @@ class CodeGen:
     def while_end(self): ## fill jumps for false and correct conditions based on 3 values in ss
         self.debug("while_end")
         breaks = self.info.loop_stack[-1] if self.info.loop_stack else []
-        print("breaks", breaks)
         a_while_add = self.semantic_stack.pop()
         expression_val = self.semantic_stack.pop()
         b_while_add = self.semantic_stack.pop()
@@ -264,8 +263,9 @@ class CodeGen:
     def set_ret_Val(self):
         self.debug("set_ret_Val")
         result = self.get_temp_address()
-        self.info.program_block.append(f"(ASSIGN, {self.info.return_value}, {result}, )")
-        self.info.pb_i += 1
+        if self.info.current_func.type == "int":
+            self.info.program_block.append(f"(ASSIGN, {self.info.return_value}, {result}, )")
+            self.info.pb_i += 1
         self.semantic_stack.push(result)
         if self.info.current_func.type == "void":
             self.semantic_stack.pop()
@@ -288,11 +288,11 @@ class CodeGen:
         return temp
     
     def debug(self, step):
-        print(step)
-        print(self.semantic_stack.stack)
-        print(self.info.program_block)
-        print(self.info.pb_i)
-        print("\n")
+        # print(step)
+        # print(self.semantic_stack.stack)
+        # print(self.info.program_block)
+        # print(self.info.pb_i)
+        # print("\n")
         pass
     
     def output(self, path):

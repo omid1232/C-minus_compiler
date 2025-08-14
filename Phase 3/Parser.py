@@ -553,6 +553,7 @@ class Parser:
             self.exit_node()
         elif self.token_string == ";":
             self.enter_node("ReturnStmtPrime")
+            self.code_gen.return_jmp()
             self.match(";")
             self.exit_node()
         elif self.token_string in {"{", "}", "if", "while", "return", "else", "break"}:  #synch
@@ -1157,8 +1158,8 @@ class Parser:
         #     else:
         #         f.write("There is no syntax error.")
         # self.code_gen.output("output.txt")
-        with open("semantic_errors.txt", "w", encoding="utf-8") as f:
-            f.write("The input program is semantically correct.")
+        # with open("semantic_errors.txt", "w", encoding="utf-8") as f:
+        #     f.write("The input program is semantically correct.")
         self.code_gen.output("output.txt")
     
 if __name__ == '__main__':
