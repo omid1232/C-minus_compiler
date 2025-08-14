@@ -26,6 +26,8 @@ class CodeGen:
         self.info = CodeGenInfo()
         self.info.return_address = self.get_data_address()
         self.info.return_value = self.get_data_address()
+        self.info.program_block.append(f"(ASSIGN, {self.info.return_address}, {self.info.return_address}, )")
+        self.info.pb_i += 1
 
         self.ops = {'+': 'ADD', '-': 'SUB', '*': 'MULT', '<': 'LT', '==': 'EQ'}
 
@@ -53,9 +55,15 @@ class CodeGen:
         id_entry = self.symbol_table.lookup(id)
         if id_entry is not None:
             if id_entry.role == 'func':
+                temp = self.get_temp_address()
+                self.info.program_block.append(f"(ASSIGN, {self.info.return_address}, {temp}, )")
+                self.info.pb_i += 1
+
+                self.info.recursive_stack.append(temp)
                 self.info.recursive_stack.append(self.info.current_func)    #for function call within another
                 self.info.recursive_stack.append(self.info.arg_start_pointer)
                 self.info.current_func = id_entry
+
             if id_entry.lexeme != "output":
                 if id_entry.role == 'arr':
                     self.semantic_stack.push(f"#{id_entry.address}")
@@ -115,7 +123,7 @@ class CodeGen:
         self.info.program_block[pb_i] = f"(JP, {self.info.pb_i}, , )"
         if self.info.declaring_main:
             self.info.program_block.append(f"(JP, {pb_i + 1}, , )")
-            self.info.program_block.append(f"(ASSIGN, 500, 500, )") #maybe jump to nowhere is error? extra code for that reason
+            self.info.program_block.append(f"(ASSIGN, {self.info.return_address}, {self.info.return_address}, )") #maybe jump to nowhere is error? extra code for that reason
             self.info.pb_i += 2
 
     def new_scope(self):
@@ -256,8 +264,12 @@ class CodeGen:
         self.info.program_block.append(f"(JP, {pb_func_add}, , )")
         self.info.pb_i += 2
         self.set_ret_Val()
+
         self.info.arg_start_pointer = self.info.recursive_stack.pop()
         self.info.current_func = self.info.recursive_stack.pop()
+        temp = self.info.recursive_stack.pop()
+        self.info.program_block.append(f"(ASSIGN, {temp}, {self.info.return_address}, )")
+        self.info.pb_i += 1
         #TODO restore state
 
     def set_ret_Val(self):
