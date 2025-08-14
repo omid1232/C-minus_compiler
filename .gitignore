@@ -11,3 +11,4 @@ __pycache__/
 output.txt
 test_output.txt
 semantic_errors.txt
+temp.txt
