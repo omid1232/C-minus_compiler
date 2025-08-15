@@ -1151,13 +1151,6 @@ class Parser:
     #------------------------------------------------ Parsing
     def parse(self):
         self.Program()
-        # self.make_tree("parse_tree.txt")
-        # with open("syntax_errors.txt", "w", encoding="utf-8") as f:
-        #     if self.parser_errors:
-        #         f.write("\n".join(self.parser_errors))
-        #     else:
-        #         f.write("There is no syntax error.")
-        # self.code_gen.output("output.txt")
         # with open("semantic_errors.txt", "w", encoding="utf-8") as f:
         #     f.write("The input program is semantically correct.")
         self.code_gen.output("output.txt")
