@@ -1,23 +1,28 @@
 class CodeGenInfo:
     def __init__(self):
-        self.word_size = 4
-        self.data_address = 500  # Starting address for variables
-        self.temp_address = 900  # Starting address for temporary variables
-        self.last_used_id = None
-        self.func_arg_num = 0    # how many parameters a function has
-        self.arg_declaration = False    # wether we are declaring function parameters
-        self.arg_start_pointer = 0 #start of arg pushed in to stack for function call
         self.program_block = []
         self.pb_i = 0
-        self.current_func = None
+
+        self.word_size = 4
+        self.data_address = 1000  # Starting address for variables
+        self.temp_address = 4000  # Starting address for temporary variables
+
         self.return_address = 0
         self.return_value = 0
+
+        self.last_used_id = None
+        self.current_func = None    # what function we are currently calling
+        self.func_arg_num = 0       # how many parameters a function has
+        self.eq_count = 0           # how many consecutive assignment are in one line
+        self.arg_start_pointer = 0  #start of arg pushed in to stack for function call
+        
+        self.arg_declaration = False    # wether we are declaring function parameters
         self.declaring_main = False
-        self.eq_count = 0
-        self.arr_ass = False
-        self.func_ass = False
-        self.loop_stack = []
-        self.recursive_stack = []
+        self.arr_ass = False            # wether we have an assignment in arr index
+        self.func_ass = False           # wether we have an assignment in func arg
+        
+        self.loop_stack = []            # stack to hold all lines we break out of loop
+        self.recursive_stack = []       # stack for holding information of last func call during new one
 
     def increase_data_address(self, size):
         self.data_address += size
