@@ -232,7 +232,11 @@ class CodeGen:
         if self.info.current_func.lexeme == "output":
             self.info.program_block.append(f"(PRINT, {self.semantic_stack.pop()}, , )")
             self.info.pb_i += 1
-            self.info.current_func = None
+            self.info.arg_start_pointer = self.info.recursive_stack.pop()
+            self.info.current_func = self.info.recursive_stack.pop()
+            temp = self.info.recursive_stack.pop()
+            self.info.program_block.append(f"(ASSIGN, {temp}, {self.info.return_address}, )")
+            self.info.pb_i += 1
             return
         self.args_set()
 
