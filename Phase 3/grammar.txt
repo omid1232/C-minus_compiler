@@ -17,7 +17,7 @@
 17. SelectionStmt -> if ( Expression ) #save #new_scope Statement #end_scope else #jpf_save #new_scope Statement #end_scope #jp
 18. IterationStmt -> while #label ( Expression ) #save #new_scope Statement #end_scope #while_end
 19. ReturnStmt -> return ReturnStmtPrime  
-20. ReturnStmtPrime -> ; | #pret_value Expression #assign #return_jmp ;
+20. ReturnStmtPrime -> #return_jmp ; | #pret_value Expression #assign #return_jmp ;
 21. Expression -> SimpleExpressionZegond | #pid ID B 
 22. B -> = #inc_eq Expression #dec_eq #assign | [ #arr_ass_flag Expression #arr_ass_reset ] #parr H | SimpleExpressionPrime  
 23. H -> = #inc_eq Expression #dec_eq #assign | G D C  
